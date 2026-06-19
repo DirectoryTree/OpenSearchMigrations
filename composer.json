@@ -1,0 +1,70 @@
+{
+    "name": "directorytree/opensearch-migrations",
+    "description": "OpenSearch migrations for Laravel",
+    "keywords": [
+        "opensearch",
+        "migrations",
+        "laravel",
+        "php"
+    ],
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "DirectoryTree",
+            "email": "support@directorytree.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "DirectoryTree\\OpenSearchMigrations\\": "src"
+        },
+        "files": [
+            "src/helpers.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "DirectoryTree\\OpenSearchMigrations\\Tests\\": "tests"
+        }
+    },
+    "require": {
+        "php": "^8.2",
+        "directorytree/opensearch-adapter": "dev-master",
+        "directorytree/opensearch-client": "dev-master",
+        "illuminate/console": "^11.0|^12.0|^13.0",
+        "illuminate/database": "^11.0|^12.0|^13.0",
+        "illuminate/filesystem": "^11.0|^12.0|^13.0",
+        "illuminate/support": "^11.0|^12.0|^13.0"
+    },
+    "require-dev": {
+        "laravel/framework": "^11.0|^12.0|^13.0",
+        "laravel/pint": "^1.0",
+        "mockery/mockery": "^1.0",
+        "orchestra/testbench": "^9.0|^10.0|^11.0",
+        "pestphp/pest": "^3.0"
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../OpenSearchAdapter"
+        },
+        {
+            "type": "path",
+            "url": "../OpenSearchClient"
+        }
+    ],
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true,
+            "pestphp/pest-plugin": true
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "DirectoryTree\\OpenSearchMigrations\\OpenSearchMigrationsServiceProvider"
+            ]
+        }
+    }
+}

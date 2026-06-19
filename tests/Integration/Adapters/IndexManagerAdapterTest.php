@@ -1,0 +1,362 @@
+<?php
+
+namespace DirectoryTree\OpenSearchMigrations\Tests\Integration\Adapters;
+
+use DirectoryTree\OpenSearchAdapter\Indices\Alias;
+use DirectoryTree\OpenSearchAdapter\Indices\IndexBlueprint;
+use DirectoryTree\OpenSearchAdapter\Indices\IndexManager;
+use DirectoryTree\OpenSearchAdapter\Indices\Mapping;
+use DirectoryTree\OpenSearchAdapter\Indices\Settings;
+use DirectoryTree\OpenSearchMigrations\Adapters\IndexManagerAdapter;
+use DirectoryTree\OpenSearchMigrations\Tests\Integration\TestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\MockObject\MockObject;
+
+class IndexManagerAdapterTest extends TestCase
+{
+    /**
+     * @var MockObject
+     */
+    protected $indexManagerMock;
+
+    /**
+     * @var IndexManagerAdapter
+     */
+    protected $indexManagerAdapter;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->indexManagerMock = $this->createMock(IndexManager::class);
+        $this->indexManagerAdapter = new IndexManagerAdapter($this->indexManagerMock);
+    }
+
+    #[DataProvider('prefixProvider')]
+    public function test_index_can_be_created_without_modifier(string $indexNamePrefix): void
+    {
+        $this->app['config']->set('opensearch.migrations.index_name_prefix', $indexNamePrefix);
+
+        $indexName = 'test';
+
+        $this->indexManagerMock
+            ->expects($this->once())
+            ->method('create')
+            ->with(new IndexBlueprint($indexNamePrefix.$indexName));
+
+        $this->indexManagerAdapter->create($indexName);
+    }
+
+    #[DataProvider('prefixProvider')]
+    public function test_index_can_be_created_with_modifier(string $indexNamePrefix): void
+    {
+        $this->app['config']->set('opensearch.migrations.index_name_prefix', $indexNamePrefix);
+
+        $indexName = 'test';
+
+        $modifier = static function (Mapping $mapping, Settings $settings) {
+            $mapping->text('title');
+            $settings->index(['number_of_replicas' => 2]);
+        };
+
+        $this->indexManagerMock
+            ->expects($this->once())
+            ->method('create')
+            ->with(new IndexBlueprint(
+                $indexNamePrefix.$indexName,
+                (new Mapping)->text('title'),
+                (new Settings)->index(['number_of_replicas' => 2])
+            ));
+
+        $this->indexManagerAdapter->create($indexName, $modifier);
+    }
+
+    #[DataProvider('prefixProvider')]
+    public function test_index_can_be_created_with_raw_mapping(string $indexNamePrefix): void
+    {
+        $this->app['config']->set('opensearch.migrations.index_name_prefix', $indexNamePrefix);
+
+        $indexName = 'test';
+
+        $mapping = [
+            'properties' => [
+                'title' => [
+                    'type' => 'text',
+                ],
+            ],
+        ];
+
+        $this->indexManagerMock
+            ->expects($this->once())
+            ->method('createRaw')
+            ->with($indexNamePrefix.$indexName, $mapping);
+
+        $this->indexManagerAdapter->createRaw($indexName, $mapping);
+    }
+
+    #[DataProvider('prefixProvider')]
+    public function test_index_with_modifier_can_be_created_only_if_it_does_not_exist(string $indexNamePrefix): void
+    {
+        $this->app['config']->set('opensearch.migrations.index_name_prefix', $indexNamePrefix);
+
+        $indexName = 'test';
+
+        $this->indexManagerMock
+            ->expects($this->once())
+            ->method('exists')
+            ->with($indexNamePrefix.$indexName)
+            ->willReturn(false);
+
+        $this->indexManagerMock
+            ->expects($this->once())
+            ->method('create')
+            ->with(new IndexBlueprint($indexNamePrefix.$indexName));
+
+        $this->indexManagerAdapter->createIfNotExists($indexName);
+    }
+
+    #[DataProvider('prefixProvider')]
+    public function test_index_with_raw_mapping_can_be_created_only_if_it_does_not_exist(string $indexNamePrefix): void
+    {
+        $this->app['config']->set('opensearch.migrations.index_name_prefix', $indexNamePrefix);
+
+        $indexName = 'test';
+
+        $mapping = [
+            'properties' => [
+                'title' => [
+                    'type' => 'text',
+                ],
+            ],
+        ];
+
+        $this->indexManagerMock
+            ->expects($this->once())
+            ->method('exists')
+            ->with($indexNamePrefix.$indexName)
+            ->willReturn(false);
+
+        $this->indexManagerMock
+            ->expects($this->once())
+            ->method('createRaw')
+            ->with($indexNamePrefix.$indexName, $mapping);
+
+        $this->indexManagerAdapter->createIfNotExistsRaw($indexName, $mapping);
+    }
+
+    #[DataProvider('prefixProvider')]
+    public function test_mapping_can_be_updated_using_modifier(string $indexNamePrefix): void
+    {
+        $this->app['config']->set('opensearch.migrations.index_name_prefix', $indexNamePrefix);
+
+        $indexName = 'test';
+
+        $modifier = static function (Mapping $mapping) {
+            $mapping->disableSource()->text('title');
+        };
+
+        $this->indexManagerMock
+            ->expects($this->once())
+            ->method('putMapping')
+            ->with(
+                $indexNamePrefix.$indexName,
+                (new Mapping)->disableSource()->text('title')
+            );
+
+        $this->indexManagerAdapter->putMapping($indexName, $modifier);
+    }
+
+    #[DataProvider('prefixProvider')]
+    public function test_mapping_can_be_updated_using_raw_input(string $indexNamePrefix): void
+    {
+        $this->app['config']->set('opensearch.migrations.index_name_prefix', $indexNamePrefix);
+
+        $indexName = 'test';
+
+        $mapping = [
+            'properties' => [
+                'title' => ['type' => 'text'],
+            ],
+        ];
+
+        $this->indexManagerMock
+            ->expects($this->once())
+            ->method('putMappingRaw')
+            ->with($indexNamePrefix.$indexName, $mapping);
+
+        $this->indexManagerAdapter->putMappingRaw($indexName, $mapping);
+    }
+
+    #[DataProvider('prefixProvider')]
+    public function test_settings_can_be_updated_using_modifier(string $indexNamePrefix): void
+    {
+        $this->app['config']->set('opensearch.migrations.index_name_prefix', $indexNamePrefix);
+
+        $indexName = 'test';
+
+        $modifier = static function (Settings $settings) {
+            $settings->index(['number_of_replicas' => 2, 'refresh_interval' => -1]);
+        };
+
+        $this->indexManagerMock
+            ->expects($this->once())
+            ->method('putSettings')
+            ->with(
+                $indexNamePrefix.$indexName,
+                (new Settings)->index(['number_of_replicas' => 2, 'refresh_interval' => -1])
+            );
+
+        $this->indexManagerAdapter->putSettings($indexName, $modifier);
+    }
+
+    #[DataProvider('prefixProvider')]
+    public function test_settings_can_be_updated_using_raw_input(string $indexNamePrefix): void
+    {
+        $this->app['config']->set('opensearch.migrations.index_name_prefix', $indexNamePrefix);
+
+        $indexName = 'test';
+        $settings = ['number_of_replicas' => 2];
+
+        $this->indexManagerMock
+            ->expects($this->once())
+            ->method('putSettingsRaw')
+            ->with($indexNamePrefix.$indexName, $settings);
+
+        $this->indexManagerAdapter->putSettingsRaw($indexName, $settings);
+    }
+
+    #[DataProvider('prefixProvider')]
+    public function test_settings_can_be_pushed_using_modifier(string $indexNamePrefix): void
+    {
+        $this->app['config']->set('opensearch.migrations.index_name_prefix', $indexNamePrefix);
+
+        $indexName = 'test';
+
+        $modifier = static function (Settings $settings) {
+            $settings->index(['number_of_replicas' => 2]);
+        };
+
+        $this->indexManagerMock
+            ->expects($this->once())
+            ->method('close')
+            ->with($indexNamePrefix.$indexName);
+
+        $this->indexManagerMock
+            ->expects($this->once())
+            ->method('putSettings')
+            ->with(
+                $indexNamePrefix.$indexName,
+                (new Settings)->index(['number_of_replicas' => 2])
+            );
+
+        $this->indexManagerMock
+            ->expects($this->once())
+            ->method('open')
+            ->with($indexNamePrefix.$indexName);
+
+        $this->indexManagerAdapter->pushSettings($indexName, $modifier);
+    }
+
+    #[DataProvider('prefixProvider')]
+    public function test_settings_can_be_pushed_using_raw_input(string $indexNamePrefix): void
+    {
+        $this->app['config']->set('opensearch.migrations.index_name_prefix', $indexNamePrefix);
+
+        $indexName = 'test';
+        $settings = ['number_of_replicas' => 2];
+
+        $this->indexManagerMock
+            ->expects($this->once())
+            ->method('close')
+            ->with($indexNamePrefix.$indexName);
+
+        $this->indexManagerMock
+            ->expects($this->once())
+            ->method('putSettingsRaw')
+            ->with($indexNamePrefix.$indexName, $settings);
+
+        $this->indexManagerMock
+            ->expects($this->once())
+            ->method('open')
+            ->with($indexNamePrefix.$indexName);
+
+        $this->indexManagerAdapter->pushSettingsRaw($indexName, $settings);
+    }
+
+    #[DataProvider('prefixProvider')]
+    public function test_index_can_be_dropped(string $indexNamePrefix): void
+    {
+        $this->app['config']->set('opensearch.migrations.index_name_prefix', $indexNamePrefix);
+
+        $indexName = 'test';
+
+        $this->indexManagerMock
+            ->expects($this->once())
+            ->method('drop')
+            ->with($indexNamePrefix.$indexName);
+
+        $this->indexManagerAdapter->drop($indexName);
+    }
+
+    #[DataProvider('prefixProvider')]
+    public function test_index_can_be_dropped_only_if_exists(string $indexNamePrefix): void
+    {
+        $this->app['config']->set('opensearch.migrations.index_name_prefix', $indexNamePrefix);
+
+        $indexName = 'test';
+
+        $this->indexManagerMock
+            ->expects($this->once())
+            ->method('exists')
+            ->with($indexNamePrefix.$indexName)
+            ->willReturn(true);
+
+        $this->indexManagerMock
+            ->expects($this->once())
+            ->method('drop')
+            ->with($indexNamePrefix.$indexName);
+
+        $this->indexManagerAdapter->dropIfExists($indexName);
+    }
+
+    #[DataProvider('prefixProvider')]
+    public function test_alias_can_be_created(string $aliasNamePrefix): void
+    {
+        $this->app['config']->set('opensearch.migrations.alias_name_prefix', $aliasNamePrefix);
+
+        $indexName = 'foo';
+        $aliasName = 'bar';
+
+        $this->indexManagerMock
+            ->expects($this->once())
+            ->method('putAlias')
+            ->with($indexName, new Alias($aliasNamePrefix.$aliasName));
+
+        $this->indexManagerAdapter->putAlias($indexName, $aliasName);
+    }
+
+    #[DataProvider('prefixProvider')]
+    public function test_alias_can_be_deleted(string $aliasNamePrefix): void
+    {
+        $this->app['config']->set('opensearch.migrations.alias_name_prefix', $aliasNamePrefix);
+
+        $indexName = 'foo';
+        $aliasName = 'bar';
+
+        $this->indexManagerMock
+            ->expects($this->once())
+            ->method('deleteAlias')
+            ->with($indexName, $aliasNamePrefix.$aliasName);
+
+        $this->indexManagerAdapter->deleteAlias($indexName, $aliasName);
+    }
+
+    public static function prefixProvider(): array
+    {
+        return [
+            'no prefix' => [''],
+            'short prefix' => ['foo_'],
+            'long prefix' => ['foo_bar_'],
+        ];
+    }
+}

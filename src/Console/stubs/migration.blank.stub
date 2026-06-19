@@ -1,0 +1,25 @@
+<?php
+
+use DirectoryTree\OpenSearchAdapter\Indices\Mapping;
+use DirectoryTree\OpenSearchAdapter\Indices\Settings;
+use DirectoryTree\OpenSearchMigrations\Facades\Index;
+use DirectoryTree\OpenSearchMigrations\MigrationInterface;
+
+class DummyClass implements MigrationInterface
+{
+    /**
+     * Run the migration.
+     */
+    public function up(): void
+    {
+        //
+    }
+
+    /**
+     * Reverse the migration.
+     */
+    public function down(): void
+    {
+        //
+    }
+}
