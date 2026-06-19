@@ -8,6 +8,9 @@ use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
 
+/**
+ * Create OpenSearch migration files.
+ */
 class MakeCommand extends Command
 {
     /**
@@ -21,6 +24,9 @@ class MakeCommand extends Command
      */
     protected $description = 'Create a new migration file';
 
+    /**
+     * Execute the console command.
+     */
     public function handle(Filesystem $filesystem, MigrationStorage $migrationStorage): int
     {
         $name = Str::snake(trim($this->argument('name')));

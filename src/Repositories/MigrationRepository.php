@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use stdClass;
 
+/**
+ * Stores and retrieves executed OpenSearch migration records.
+ */
 class MigrationRepository implements ReadinessInterface
 {
     /**
@@ -21,12 +24,18 @@ class MigrationRepository implements ReadinessInterface
      */
     protected $connection;
 
+    /**
+     * Create a new migration repository instance.
+     */
     public function __construct()
     {
         $this->table = config('opensearch.migrations.table');
         $this->connection = config('opensearch.migrations.connection');
     }
 
+    /**
+     * Insert an executed migration record.
+     */
     public function insert(string $fileName, int $batch): bool
     {
         return $this->table()->insert([
@@ -35,6 +44,9 @@ class MigrationRepository implements ReadinessInterface
         ]);
     }
 
+    /**
+     * Determine if a migration has been executed.
+     */
     public function exists(string $fileName): bool
     {
         return $this->table()
@@ -42,6 +54,9 @@ class MigrationRepository implements ReadinessInterface
             ->exists();
     }
 
+    /**
+     * Delete an executed migration record.
+     */
     public function delete(string $fileName): bool
     {
         return (bool) $this->table()
@@ -49,12 +64,17 @@ class MigrationRepository implements ReadinessInterface
             ->delete();
     }
 
+    /**
+     * Delete all executed migration records.
+     */
     public function deleteAll(): void
     {
         $this->table()->delete();
     }
 
     /**
+     * Truncate all executed migration records.
+     *
      * @deprecated
      */
     public function truncate(): void
@@ -62,6 +82,9 @@ class MigrationRepository implements ReadinessInterface
         $this->table()->truncate();
     }
 
+    /**
+     * Get the latest migration batch number.
+     */
     public function getLastBatchNumber(): ?int
     {
         /** @var stdClass|null $record */
@@ -73,6 +96,11 @@ class MigrationRepository implements ReadinessInterface
         return isset($record) ? (int) $record->batch : null;
     }
 
+    /**
+     * Get all migration names from the latest batch.
+     *
+     * @return Collection<int, string>
+     */
     public function getLastBatch(): Collection
     {
         return $this->table()
@@ -81,6 +109,11 @@ class MigrationRepository implements ReadinessInterface
             ->pluck('migration');
     }
 
+    /**
+     * Get all executed migration names.
+     *
+     * @return Collection<int, string>
+     */
     public function getAll(): Collection
     {
         return $this->table()
@@ -88,11 +121,17 @@ class MigrationRepository implements ReadinessInterface
             ->pluck('migration');
     }
 
+    /**
+     * Get a query builder for the migration table.
+     */
     protected function table(): Builder
     {
         return DB::connection($this->connection)->table($this->table);
     }
 
+    /**
+     * Determine if the migration repository is ready.
+     */
     public function isReady(): bool
     {
         return Schema::connection($this->connection)->hasTable($this->table);

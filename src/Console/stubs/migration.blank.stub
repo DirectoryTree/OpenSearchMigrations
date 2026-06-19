@@ -5,6 +5,9 @@ use DirectoryTree\OpenSearchAdapter\Indices\Settings;
 use DirectoryTree\OpenSearchMigrations\Facades\Index;
 use DirectoryTree\OpenSearchMigrations\MigrationInterface;
 
+/**
+ * Run OpenSearch index changes.
+ */
 class DummyClass implements MigrationInterface
 {
     /**

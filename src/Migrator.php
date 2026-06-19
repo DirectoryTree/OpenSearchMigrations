@@ -9,6 +9,9 @@ use DirectoryTree\OpenSearchMigrations\Repositories\MigrationRepository;
 use Illuminate\Console\OutputStyle;
 use Illuminate\Support\Collection;
 
+/**
+ * Runs and rolls back OpenSearch migration files.
+ */
 class Migrator implements ReadinessInterface
 {
     /**
@@ -31,6 +34,9 @@ class Migrator implements ReadinessInterface
      */
     protected $migrationFactory;
 
+    /**
+     * Create a new migrator instance.
+     */
     public function __construct(
         MigrationRepository $migrationRepository,
         MigrationStorage $migrationStorage,
@@ -41,6 +47,9 @@ class Migrator implements ReadinessInterface
         $this->migrationFactory = $migrationFactory;
     }
 
+    /**
+     * Set the console output implementation.
+     */
     public function setOutput(OutputStyle $output): self
     {
         $this->output = $output;
@@ -48,6 +57,9 @@ class Migrator implements ReadinessInterface
         return $this;
     }
 
+    /**
+     * Run a single migration by file name.
+     */
     public function migrateOne(string $fileName): self
     {
         $file = $this->migrationStorage->findByName($fileName);
@@ -61,6 +73,9 @@ class Migrator implements ReadinessInterface
         return $this;
     }
 
+    /**
+     * Run all outstanding migrations.
+     */
     public function migrateAll(): self
     {
         $files = $this->migrationStorage->findAll();
@@ -75,6 +90,9 @@ class Migrator implements ReadinessInterface
         return $this;
     }
 
+    /**
+     * Roll back a single migration by file name.
+     */
     public function rollbackOne(string $fileName): self
     {
         $file = $this->migrationStorage->findByName($fileName);
@@ -90,6 +108,9 @@ class Migrator implements ReadinessInterface
         return $this;
     }
 
+    /**
+     * Roll back the last migration batch.
+     */
     public function rollbackLastBatch(): self
     {
         $fileNames = $this->migrationRepository->getLastBatch();
@@ -99,6 +120,9 @@ class Migrator implements ReadinessInterface
         return $this;
     }
 
+    /**
+     * Roll back all migrations.
+     */
     public function rollbackAll(): self
     {
         $fileNames = $this->migrationRepository->getAll();
@@ -108,6 +132,9 @@ class Migrator implements ReadinessInterface
         return $this;
     }
 
+    /**
+     * Display the migration status table.
+     */
     public function showStatus(): self
     {
         $files = $this->migrationStorage->findAll();
@@ -130,6 +157,11 @@ class Migrator implements ReadinessInterface
         return $this;
     }
 
+    /**
+     * Run the given migration files.
+     *
+     * @param  Collection<int, MigrationFile>  $files
+     */
     protected function migrate(Collection $files): self
     {
         if ($files->isEmpty()) {
@@ -154,6 +186,11 @@ class Migrator implements ReadinessInterface
         return $this;
     }
 
+    /**
+     * Roll back the given migration file names.
+     *
+     * @param  Collection<int, string>  $fileNames
+     */
     protected function rollback(Collection $fileNames): self
     {
         $files = $fileNames->map(function (string $fileName) {
@@ -189,6 +226,9 @@ class Migrator implements ReadinessInterface
         return $this;
     }
 
+    /**
+     * Determine if migrations can be run.
+     */
     public function isReady(): bool
     {
         if (! $isMigrationRepositoryReady = $this->migrationRepository->isReady()) {

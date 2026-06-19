@@ -6,6 +6,9 @@ use DirectoryTree\OpenSearchMigrations\Migrator;
 use Illuminate\Console\Command;
 use Illuminate\Console\ConfirmableTrait;
 
+/**
+ * Roll back all OpenSearch migrations.
+ */
 class ResetCommand extends Command
 {
     use ConfirmableTrait;
@@ -21,6 +24,9 @@ class ResetCommand extends Command
      */
     protected $description = 'Rollback all migrations';
 
+    /**
+     * Execute the console command.
+     */
     public function handle(Migrator $migrator): int
     {
         $migrator->setOutput($this->output);

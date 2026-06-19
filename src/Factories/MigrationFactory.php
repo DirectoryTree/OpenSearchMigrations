@@ -6,8 +6,14 @@ use DirectoryTree\OpenSearchMigrations\Filesystem\MigrationFile;
 use DirectoryTree\OpenSearchMigrations\MigrationInterface;
 use Illuminate\Support\Str;
 
+/**
+ * Creates migration instances from migration files.
+ */
 class MigrationFactory
 {
+    /**
+     * Make a migration instance from a migration file.
+     */
     public function makeFromFile(MigrationFile $file): MigrationInterface
     {
         require_once $file->getPath();

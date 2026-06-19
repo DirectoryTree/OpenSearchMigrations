@@ -6,6 +6,9 @@ use DirectoryTree\OpenSearchMigrations\Migrator;
 use Illuminate\Console\Command;
 use Illuminate\Console\ConfirmableTrait;
 
+/**
+ * Run pending OpenSearch migrations.
+ */
 class MigrateCommand extends Command
 {
     use ConfirmableTrait;
@@ -22,6 +25,9 @@ class MigrateCommand extends Command
      */
     protected $description = 'Run the migrations';
 
+    /**
+     * Execute the console command.
+     */
     public function handle(Migrator $migrator): int
     {
         $migrator->setOutput($this->output);

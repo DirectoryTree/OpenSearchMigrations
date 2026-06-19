@@ -14,6 +14,9 @@ use DirectoryTree\OpenSearchMigrations\Console\RollbackCommand;
 use DirectoryTree\OpenSearchMigrations\Console\StatusCommand;
 use Illuminate\Support\ServiceProvider;
 
+/**
+ * Registers the OpenSearch migrations package.
+ */
 class OpenSearchMigrationsServiceProvider extends ServiceProvider
 {
     /**

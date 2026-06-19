@@ -17,7 +17,7 @@ return [
     | Database Connection
     |--------------------------------------------------------------------------
     |
-    | This connection stores the OpenSearch migration table.When null, the
+    | This connection stores the OpenSearch migration table. When null, the
     | application's default database connection will be used.
     |
     */
@@ -42,7 +42,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | Prefixes are applied to index and alias names before OpenSearch receives
-    | them.The Scout prefix is used by default to keep search resources aligned.
+    | them. The Scout prefix is used by default to keep search resources aligned.
     |
     */
 

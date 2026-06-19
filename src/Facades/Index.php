@@ -6,6 +6,8 @@ use DirectoryTree\OpenSearchMigrations\IndexManagerInterface;
 use Illuminate\Support\Facades\Facade;
 
 /**
+ * Access the OpenSearch migration index manager.
+ *
  * @method static self create(string $indexName, ?callable $modifier = null)
  * @method static self createRaw(string $indexName, ?array $mapping = null, ?array $settings = null)
  * @method static self createIfNotExists(string $indexName, ?callable $modifier = null)

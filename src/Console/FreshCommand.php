@@ -8,6 +8,9 @@ use DirectoryTree\OpenSearchMigrations\Repositories\MigrationRepository;
 use Illuminate\Console\Command;
 use Illuminate\Console\ConfirmableTrait;
 
+/**
+ * Drop all indices and re-run all OpenSearch migrations.
+ */
 class FreshCommand extends Command
 {
     use ConfirmableTrait;
@@ -23,6 +26,9 @@ class FreshCommand extends Command
      */
     protected $description = 'Drop all indices and re-run all migrations';
 
+    /**
+     * Execute the console command.
+     */
     public function handle(
         Migrator $migrator,
         MigrationRepository $migrationRepository,
