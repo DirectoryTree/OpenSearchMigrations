@@ -18,17 +18,9 @@ use function DirectoryTree\OpenSearchMigrations\prefix_index_name;
 class IndexManagerAdapter implements IndexManagerInterface
 {
     /**
-     * @var IndexManager
-     */
-    protected $indexManager;
-
-    /**
      * Create a new index manager adapter instance.
      */
-    public function __construct(IndexManager $indexManager)
-    {
-        $this->indexManager = $indexManager;
-    }
+    public function __construct(protected IndexManager $indexManager) {}
 
     /**
      * Create a new index with an optional mapping and settings modifier.

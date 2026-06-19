@@ -8,17 +8,9 @@ namespace DirectoryTree\OpenSearchMigrations\Filesystem;
 class MigrationFile
 {
     /**
-     * @var string
-     */
-    protected $filePath;
-
-    /**
      * Create a new migration file instance.
      */
-    public function __construct(string $filePath)
-    {
-        $this->filePath = $filePath;
-    }
+    public function __construct(protected string $filePath) {}
 
     /**
      * Get the migration file name without its extension.

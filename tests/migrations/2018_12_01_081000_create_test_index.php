@@ -7,14 +7,9 @@ use OpenSearch\Client;
 class CreateTestIndex implements MigrationInterface
 {
     /**
-     * @var Client
+     * Create a new test index migration instance.
      */
-    protected $client;
-
-    public function __construct(Client $client)
-    {
-        $this->client = $client;
-    }
+    public function __construct(protected Client $client) {}
 
     public function up(): void
     {

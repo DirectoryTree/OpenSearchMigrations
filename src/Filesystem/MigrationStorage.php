@@ -12,11 +12,6 @@ use Illuminate\Support\Collection;
 class MigrationStorage implements ReadinessInterface
 {
     /**
-     * @var Filesystem
-     */
-    protected $filesystem;
-
-    /**
      * @var string
      */
     protected $directory;
@@ -24,9 +19,8 @@ class MigrationStorage implements ReadinessInterface
     /**
      * Create a new migration storage instance.
      */
-    public function __construct(Filesystem $filesystem)
+    public function __construct(protected Filesystem $filesystem)
     {
-        $this->filesystem = $filesystem;
         $this->directory = rtrim(config('opensearch.migrations.storage_directory', ''), '/');
     }
 

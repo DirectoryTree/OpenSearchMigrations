@@ -20,32 +20,13 @@ class Migrator implements ReadinessInterface
     protected $output;
 
     /**
-     * @var MigrationRepository
-     */
-    protected $migrationRepository;
-
-    /**
-     * @var MigrationStorage
-     */
-    protected $migrationStorage;
-
-    /**
-     * @var MigrationFactory
-     */
-    protected $migrationFactory;
-
-    /**
      * Create a new migrator instance.
      */
     public function __construct(
-        MigrationRepository $migrationRepository,
-        MigrationStorage $migrationStorage,
-        MigrationFactory $migrationFactory
-    ) {
-        $this->migrationStorage = $migrationStorage;
-        $this->migrationRepository = $migrationRepository;
-        $this->migrationFactory = $migrationFactory;
-    }
+        protected MigrationRepository $migrationRepository,
+        protected MigrationStorage $migrationStorage,
+        protected MigrationFactory $migrationFactory
+    ) {}
 
     /**
      * Set the console output implementation.
