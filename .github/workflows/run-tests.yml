@@ -11,7 +11,7 @@ jobs:
         image: opensearchproject/opensearch:2.13.0
         env:
           discovery.type: single-node
-          plugins.security.disabled: true
+          DISABLE_SECURITY_PLUGIN: true
           OPENSEARCH_JAVA_OPTS: -Xms512m -Xmx512m
         ports:
           - 9200:9200
@@ -49,6 +49,8 @@ jobs:
 
       - name: Install dependencies
         run: |
+          composer config repositories.0 vcs https://github.com/DirectoryTree/OpenSearchAdapter
+          composer config repositories.1 vcs https://github.com/DirectoryTree/OpenSearchClient
           composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
           composer update --prefer-dist --no-interaction
 
