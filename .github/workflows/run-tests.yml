@@ -50,8 +50,8 @@ jobs:
       - name: Install dependencies
         run: |
           ruby -rjson -e 'composer = JSON.parse(File.read("composer.json")); composer["repositories"] = [{"type" => "vcs", "url" => "https://github.com/DirectoryTree/OpenSearchAdapter"}, {"type" => "vcs", "url" => "https://github.com/DirectoryTree/OpenSearchClient"}]; File.write("composer.json", JSON.pretty_generate(composer))'
-          composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
-          composer update --prefer-dist --no-interaction
+          composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update --no-blocking
+          composer update --prefer-dist --no-interaction --no-blocking
 
       - name: Wait for OpenSearch
         run: |
@@ -68,6 +68,6 @@ jobs:
           exit 1
 
       - name: Execute tests
-        run: vendor/bin/pest --ci
+        run: vendor/bin/pest
         env:
           OPENSEARCH_HOST: http://127.0.0.1:9200
