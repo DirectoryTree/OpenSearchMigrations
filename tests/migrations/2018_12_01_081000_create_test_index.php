@@ -4,6 +4,8 @@ use DirectoryTree\OpenSearchMigrations\Facades\Index;
 use DirectoryTree\OpenSearchMigrations\MigrationInterface;
 use OpenSearch\Client;
 
+use function DirectoryTree\OpenSearchMigrations\prefix_index_name;
+
 class CreateTestIndex implements MigrationInterface
 {
     /**
@@ -16,7 +18,7 @@ class CreateTestIndex implements MigrationInterface
         Index::create('test');
 
         $this->client->indices()->clearCache([
-            'index' => 'test',
+            'index' => prefix_index_name('test'),
         ]);
     }
 
