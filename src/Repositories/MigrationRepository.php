@@ -15,23 +15,12 @@ use stdClass;
 class MigrationRepository implements ReadinessInterface
 {
     /**
-     * @var string
-     */
-    protected $table;
-
-    /**
-     * @var string
-     */
-    protected $connection;
-
-    /**
      * Create a new migration repository instance.
      */
-    public function __construct()
-    {
-        $this->table = config('opensearch-migrations.table');
-        $this->connection = config('opensearch-migrations.connection');
-    }
+    public function __construct(
+        protected string $table,
+        protected ?string $connection = null
+    ) {}
 
     /**
      * Insert an executed migration record.

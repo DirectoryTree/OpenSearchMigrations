@@ -12,6 +12,9 @@ use DirectoryTree\OpenSearchMigrations\Console\RefreshCommand;
 use DirectoryTree\OpenSearchMigrations\Console\ResetCommand;
 use DirectoryTree\OpenSearchMigrations\Console\RollbackCommand;
 use DirectoryTree\OpenSearchMigrations\Console\StatusCommand;
+use DirectoryTree\OpenSearchMigrations\Filesystem\MigrationStorage;
+use DirectoryTree\OpenSearchMigrations\Repositories\MigrationRepository;
+use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -42,6 +45,20 @@ class OpenSearchMigrationsServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__.'/../config/opensearch-migrations.php', 'opensearch-migrations');
 
         $this->app->bindIf(IndexManagerInterface::class, IndexManagerAdapter::class);
+
+        $this->app->bindIf(MigrationRepository::class, function () {
+            return new MigrationRepository(
+                config('opensearch-migrations.table'),
+                config('opensearch-migrations.connection')
+            );
+        });
+
+        $this->app->bindIf(MigrationStorage::class, function ($app) {
+            return new MigrationStorage(
+                $app->make(Filesystem::class),
+                config('opensearch-migrations.storage_directory')
+            );
+        });
 
         $this->app->singletonIf(IndexManager::class, function ($app) {
             return new IndexManager($app->make(OpenSearchManager::class)->default());

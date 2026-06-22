@@ -34,7 +34,7 @@ class MigrationRepositoryTest extends TestCase
             ['migration' => '2018_12_01_081000_create_test_index', 'batch' => 1],
         ]);
 
-        $this->migrationRepository = new MigrationRepository;
+        $this->migrationRepository = $this->app->make(MigrationRepository::class);
     }
 
     public function test_record_can_be_inserted(): void

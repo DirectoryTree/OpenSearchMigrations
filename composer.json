@@ -18,10 +18,7 @@
     "autoload": {
         "psr-4": {
             "DirectoryTree\\OpenSearchMigrations\\": "src"
-        },
-        "files": [
-            "src/helpers.php"
-        ]
+        }
     },
     "autoload-dev": {
         "psr-4": {
