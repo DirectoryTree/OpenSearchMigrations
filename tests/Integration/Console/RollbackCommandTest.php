@@ -1,96 +1,52 @@
 <?php
 
-namespace DirectoryTree\OpenSearchMigrations\Tests\Integration\Console;
-
 use DirectoryTree\OpenSearchMigrations\Console\RollbackCommand;
 use DirectoryTree\OpenSearchMigrations\Migrator;
-use DirectoryTree\OpenSearchMigrations\Tests\Integration\TestCase;
-use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\NullOutput;
 
-class RollbackCommandTest extends TestCase
-{
-    /**
-     * @var MockObject
-     */
-    protected $migrator;
+it('does nothing if the migrator is not ready', function (): void {
+    $migrator = Mockery::mock(Migrator::class);
+    app()->instance(Migrator::class, $migrator);
 
-    /**
-     * @var RollbackCommand
-     */
-    protected $command;
+    $migrator->shouldReceive('setOutput')->once()->andReturnSelf();
 
-    protected function setUp(): void
-    {
-        parent::setUp();
+    $command = new RollbackCommand;
+    $command->setLaravel(app());
 
-        $this->migrator = $this->createMock(Migrator::class);
-        $this->app->instance(Migrator::class, $this->migrator);
+    $migrator->shouldReceive('isReady')->once()->andReturnFalse();
+    $migrator->shouldNotReceive('rollbackOne');
+    $migrator->shouldNotReceive('rollbackLastBatch');
 
-        $this->command = new RollbackCommand;
-        $this->command->setLaravel($this->app);
-    }
+    expect($command->run(new ArrayInput(['--force' => true]), new NullOutput))->toBe(1);
+});
 
-    public function test_does_nothing_if_migrator_is_not_ready(): void
-    {
-        $this->migrator
-            ->expects($this->once())
-            ->method('isReady')
-            ->willReturn(false);
+it('rolls back one migration when a file name is provided', function (): void {
+    $migrator = Mockery::mock(Migrator::class);
+    app()->instance(Migrator::class, $migrator);
 
-        $this->migrator
-            ->expects($this->never())
-            ->method('rollbackOne');
+    $migrator->shouldReceive('setOutput')->once()->andReturnSelf();
 
-        $this->migrator
-            ->expects($this->never())
-            ->method('rollbackLastBatch');
+    $command = new RollbackCommand;
+    $command->setLaravel(app());
 
-        $result = $this->command->run(
-            new ArrayInput(['--force' => true]),
-            new NullOutput
-        );
+    $migrator->shouldReceive('isReady')->once()->andReturnTrue();
+    $migrator->shouldReceive('rollbackOne')->once()->with('test_file_name');
 
-        $this->assertSame(1, $result);
-    }
+    expect($command->run(new ArrayInput(['--force' => true, 'fileName' => 'test_file_name']), new NullOutput))->toBe(0);
+});
 
-    public function test_rollbacks_one_migration_if_file_name_is_provided(): void
-    {
-        $this->migrator
-            ->expects($this->once())
-            ->method('isReady')
-            ->willReturn(true);
+it('rolls back the last batch when a file name is not provided', function (): void {
+    $migrator = Mockery::mock(Migrator::class);
+    app()->instance(Migrator::class, $migrator);
 
-        $this->migrator
-            ->expects($this->once())
-            ->method('rollbackOne')
-            ->with('test_file_name');
+    $migrator->shouldReceive('setOutput')->once()->andReturnSelf();
 
-        $result = $this->command->run(
-            new ArrayInput(['--force' => true, 'fileName' => 'test_file_name']),
-            new NullOutput
-        );
+    $command = new RollbackCommand;
+    $command->setLaravel(app());
 
-        $this->assertSame(0, $result);
-    }
+    $migrator->shouldReceive('isReady')->once()->andReturnTrue();
+    $migrator->shouldReceive('rollbackLastBatch')->once();
 
-    public function test_rollbacks_last_batch_if_file_name_is_not_provided(): void
-    {
-        $this->migrator
-            ->expects($this->once())
-            ->method('isReady')
-            ->willReturn(true);
-
-        $this->migrator
-            ->expects($this->once())
-            ->method('rollbackLastBatch');
-
-        $result = $this->command->run(
-            new ArrayInput(['--force' => true]),
-            new NullOutput
-        );
-
-        $this->assertSame(0, $result);
-    }
-}
+    expect($command->run(new ArrayInput(['--force' => true]), new NullOutput))->toBe(0);
+});

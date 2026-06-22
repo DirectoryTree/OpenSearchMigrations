@@ -3,6 +3,7 @@
 namespace DirectoryTree\OpenSearchMigrations\Facades;
 
 use DirectoryTree\OpenSearchMigrations\IndexManagerInterface;
+use DirectoryTree\OpenSearchMigrations\Testing\Fakes\FakeIndexManager;
 use Illuminate\Support\Facades\Facade;
 
 /**
@@ -20,6 +21,23 @@ use Illuminate\Support\Facades\Facade;
  */
 class Index extends Facade
 {
+    /**
+     * Replace the bound index manager with a fake.
+     *
+     * @param  array<int, string>  $existing
+     */
+    public static function fake(array $existing = []): FakeIndexManager
+    {
+        static::clearResolvedInstance(IndexManagerInterface::class);
+
+        static::$app->instance(
+            IndexManagerInterface::class,
+            $fake = new FakeIndexManager($existing),
+        );
+
+        return $fake;
+    }
+
     /**
      * {@inheritDoc}
      */

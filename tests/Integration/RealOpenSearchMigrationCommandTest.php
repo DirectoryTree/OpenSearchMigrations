@@ -1,111 +1,95 @@
 <?php
 
-namespace DirectoryTree\OpenSearchMigrations\Tests\Integration;
-
 use DirectoryTree\OpenSearchAdapter\Indices\Mapping;
 use DirectoryTree\OpenSearchAdapter\Indices\Settings;
 use DirectoryTree\OpenSearchMigrations\IndexManagerInterface;
+use DirectoryTree\OpenSearchMigrations\Tests\Integration\RealOpenSearchTestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
+use OpenSearch\Client;
 
-class RealOpenSearchMigrationCommandTest extends RealOpenSearchTestCase
-{
-    use RefreshDatabase;
+uses(RealOpenSearchTestCase::class, RefreshDatabase::class);
 
-    public function test_migration_commands_run_against_opensearch(): void
-    {
-        $index = $this->indexPrefix.'real_test';
-        $aliasName = $this->indexPrefix.'real_alias';
+it('runs migration commands against opensearch', function (): void {
+    $prefix = config('opensearch-migrations.index_name_prefix');
+    $client = app(Client::class);
+    $index = $prefix.'real_test';
+    $aliasName = $prefix.'real_alias';
 
-        $this->artisan('opensearch:migrate', ['--force' => true])
-            ->assertExitCode(0);
+    expect(Artisan::call('opensearch:migrate', ['--force' => true]))->toBe(0);
+    expect($client->indices()->exists(['index' => $index]))->toBeTrue();
 
-        $this->assertTrue($this->client()->indices()->exists(['index' => $index]));
+    $mapping = $client->indices()->getMapping(['index' => $index]);
 
-        $mapping = $this->client()->indices()->getMapping(['index' => $index]);
+    expect($mapping[$index]['mappings']['properties']['title']['type'] ?? null)->toBe('text');
 
-        $this->assertSame(
-            'text',
-            $mapping[$index]['mappings']['properties']['title']['type'] ?? null
-        );
+    $aliases = $client->indices()->getAlias(['index' => $index]);
 
-        $aliases = $this->client()->indices()->getAlias(['index' => $index]);
+    expect($aliases[$index]['aliases'])->toHaveKey($aliasName);
 
-        $this->assertArrayHasKey($aliasName, $aliases[$index]['aliases']);
+    expect(Artisan::call('opensearch:migrate:status'))->toBe(0);
+    expect(Artisan::call('opensearch:migrate:rollback', [
+        'fileName' => '2026_01_01_000001_add_real_test_alias',
+        '--force' => true,
+    ]))->toBe(0);
 
-        $this->artisan('opensearch:migrate:status')
-            ->assertExitCode(0);
+    expect(DB::table('real_opensearch_migrations')->where('migration', '2026_01_01_000001_add_real_test_alias')->exists())->toBeFalse();
 
-        $this->artisan('opensearch:migrate:rollback', [
-            'fileName' => '2026_01_01_000001_add_real_test_alias',
-            '--force' => true,
-        ])->assertExitCode(0);
+    expect(Artisan::call('opensearch:migrate:reset', ['--force' => true]))->toBe(0);
+    expect($client->indices()->exists(['index' => $index]))->toBeFalse();
+});
 
-        $this->assertDatabaseMissing('real_opensearch_migrations', [
-            'migration' => '2026_01_01_000001_add_real_test_alias',
+it('runs index adapter operations against opensearch', function (): void {
+    $indices = app(IndexManagerInterface::class);
+    $client = app(Client::class);
+    $prefix = config('opensearch-migrations.index_name_prefix');
+
+    $index = $prefix.'adapter_real_test';
+    $aliasName = $prefix.'adapter_real_alias';
+
+    try {
+        $indices->create('adapter_real_test', function (Mapping $mapping, Settings $settings): void {
+            $mapping->text('title')->keyword('status');
+
+            $settings->index([
+                'number_of_shards' => 1,
+                'number_of_replicas' => 0,
+            ]);
+        });
+
+        expect($client->indices()->exists(['index' => $index]))->toBeTrue();
+
+        $indices->putMapping('adapter_real_test', function (Mapping $mapping): void {
+            $mapping->keyword('category');
+        });
+
+        $mapping = $client->indices()->getMapping(['index' => $index]);
+
+        expect($mapping[$index]['mappings']['properties']['category']['type'] ?? null)->toBe('keyword');
+
+        $indices->putAlias('adapter_real_test', 'adapter_real_alias', [
+            'term' => ['status' => 'published'],
         ]);
 
-        $this->artisan('opensearch:migrate:reset', ['--force' => true])
-            ->assertExitCode(0);
+        $aliases = $client->indices()->getAlias(['index' => $index]);
 
-        $this->assertFalse($this->client()->indices()->exists(['index' => $index]));
-    }
+        expect($aliases[$index]['aliases'][$aliasName]['filter'] ?? null)->toBe([
+            'term' => ['status' => 'published'],
+        ]);
 
-    public function test_index_adapter_operations_run_against_opensearch(): void
-    {
-        $indices = app(IndexManagerInterface::class);
+        $indices->deleteAlias('adapter_real_test', 'adapter_real_alias');
 
-        $index = $this->indexPrefix.'adapter_real_test';
-        $aliasName = $this->indexPrefix.'adapter_real_alias';
+        $aliases = $client->indices()->getAlias(['index' => $index]);
 
-        try {
-            $indices->create('adapter_real_test', function (Mapping $mapping, Settings $settings): void {
-                $mapping
-                    ->text('title')
-                    ->keyword('status');
+        expect($aliases[$index]['aliases'])->not->toHaveKey($aliasName);
 
-                $settings->index([
-                    'number_of_shards' => 1,
-                    'number_of_replicas' => 0,
-                ]);
-            });
+        $indices->dropIfExists('adapter_real_test');
 
-            $this->assertTrue($this->client()->indices()->exists(['index' => $index]));
-
-            $indices->putMapping('adapter_real_test', function (Mapping $mapping): void {
-                $mapping->keyword('category');
-            });
-
-            $mapping = $this->client()->indices()->getMapping(['index' => $index]);
-
-            $this->assertSame(
-                'keyword',
-                $mapping[$index]['mappings']['properties']['category']['type'] ?? null
-            );
-
-            $indices->putAlias('adapter_real_test', 'adapter_real_alias', [
-                'term' => [
-                    'status' => 'published',
-                ],
-            ]);
-
-            $aliases = $this->client()->indices()->getAlias(['index' => $index]);
-
-            $this->assertSame(
-                ['term' => ['status' => 'published']],
-                $aliases[$index]['aliases'][$aliasName]['filter'] ?? null
-            );
-
-            $indices->deleteAlias('adapter_real_test', 'adapter_real_alias');
-
-            $aliases = $this->client()->indices()->getAlias(['index' => $index]);
-
-            $this->assertArrayNotHasKey($aliasName, $aliases[$index]['aliases']);
-
-            $indices->dropIfExists('adapter_real_test');
-
-            $this->assertFalse($this->client()->indices()->exists(['index' => $index]));
-        } finally {
-            $this->dropIndexIfExists($index);
+        expect($client->indices()->exists(['index' => $index]))->toBeFalse();
+    } finally {
+        if ($client->indices()->exists(['index' => $index])) {
+            $client->indices()->delete(['index' => $index]);
         }
     }
-}
+});

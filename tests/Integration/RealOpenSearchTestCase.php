@@ -10,7 +10,7 @@ use Orchestra\Testbench\TestCase as TestbenchTestCase;
 
 class RealOpenSearchTestCase extends TestbenchTestCase
 {
-    protected string $indexPrefix;
+    public string $indexPrefix;
 
     protected function getPackageProviders($app): array
     {
@@ -58,12 +58,12 @@ class RealOpenSearchTestCase extends TestbenchTestCase
         parent::tearDown();
     }
 
-    protected function client(): Client
+    public function client(): Client
     {
         return $this->app->make(Client::class);
     }
 
-    protected function dropIndexIfExists(string $index): void
+    public function dropIndexIfExists(string $index): void
     {
         if ($this->client()->indices()->exists(['index' => $index])) {
             $this->client()->indices()->delete(['index' => $index]);

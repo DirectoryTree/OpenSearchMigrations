@@ -14,6 +14,8 @@ class MigrateCommand extends Command
     use ConfirmableTrait;
 
     /**
+     * The name and signature of the console command.
+     *
      * @var string
      */
     protected $signature = 'opensearch:migrate 
@@ -21,6 +23,8 @@ class MigrateCommand extends Command
         {--force : Force the operation to run when in production}';
 
     /**
+     * The console command description.
+     *
      * @var string
      */
     protected $description = 'Run the migrations';

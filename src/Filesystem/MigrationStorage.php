@@ -31,6 +31,7 @@ class MigrationStorage implements ReadinessInterface
         }
 
         $filePath = $this->resolvePath($fileName);
+
         $this->filesystem->put($filePath, $content);
 
         return new MigrationFile($filePath);
@@ -39,11 +40,13 @@ class MigrationStorage implements ReadinessInterface
     /**
      * Find a migration file by name.
      */
-    public function findByName(string $fileName): ?MigrationFile
+    public function find(string $fileName): ?MigrationFile
     {
         $filePath = $this->resolvePath($fileName);
 
-        return $this->filesystem->exists($filePath) ? new MigrationFile($filePath) : null;
+        return $this->filesystem->exists($filePath)
+            ? new MigrationFile($filePath)
+            : null;
     }
 
     /**
@@ -51,7 +54,7 @@ class MigrationStorage implements ReadinessInterface
      *
      * @return Collection<int, MigrationFile>
      */
-    public function findAll(): Collection
+    public function all(): Collection
     {
         $files = $this->filesystem->glob($this->directory.'/*_*.php');
 

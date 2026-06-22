@@ -15,9 +15,9 @@ use Illuminate\Support\Collection;
 class Migrator implements ReadinessInterface
 {
     /**
-     * @var OutputStyle
+     * The console output implementation.
      */
-    protected $output;
+    protected OutputStyle $output;
 
     /**
      * Create a new migrator instance.
@@ -43,7 +43,7 @@ class Migrator implements ReadinessInterface
      */
     public function migrateOne(string $fileName): self
     {
-        $file = $this->migrationStorage->findByName($fileName);
+        $file = $this->migrationStorage->find($fileName);
 
         if (is_null($file)) {
             $this->output->writeln('<error>Migration is not found:</error> '.$fileName);
@@ -59,7 +59,7 @@ class Migrator implements ReadinessInterface
      */
     public function migrateAll(): self
     {
-        $files = $this->migrationStorage->findAll();
+        $files = $this->migrationStorage->all();
         $migratedFileNames = $this->migrationRepository->getAll();
 
         $nonMigratedFiles = $files->filter(function (MigrationFile $file) use ($migratedFileNames) {
@@ -76,7 +76,7 @@ class Migrator implements ReadinessInterface
      */
     public function rollbackOne(string $fileName): self
     {
-        $file = $this->migrationStorage->findByName($fileName);
+        $file = $this->migrationStorage->find($fileName);
 
         if (is_null($file)) {
             $this->output->writeln('<error>Migration is not found:</error> '.$fileName);
@@ -118,7 +118,7 @@ class Migrator implements ReadinessInterface
      */
     public function showStatus(): self
     {
-        $files = $this->migrationStorage->findAll();
+        $files = $this->migrationStorage->all();
 
         $migratedFileNames = $this->migrationRepository->getAll();
         $migratedLastBatchFileNames = $this->migrationRepository->getLastBatch();
@@ -175,7 +175,7 @@ class Migrator implements ReadinessInterface
     protected function rollback(Collection $fileNames): self
     {
         $files = $fileNames->map(function (string $fileName) {
-            return $this->migrationStorage->findByName($fileName);
+            return $this->migrationStorage->find($fileName);
         })->filter();
 
         if ($fileNames->isEmpty()) {

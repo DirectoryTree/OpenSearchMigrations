@@ -1,107 +1,52 @@
 <?php
 
-namespace DirectoryTree\OpenSearchMigrations\Tests\Integration\Console;
-
 use DirectoryTree\OpenSearchMigrations\Console\FreshCommand;
 use DirectoryTree\OpenSearchMigrations\IndexManagerInterface;
 use DirectoryTree\OpenSearchMigrations\Migrator;
 use DirectoryTree\OpenSearchMigrations\Repositories\MigrationRepository;
-use DirectoryTree\OpenSearchMigrations\Tests\Integration\TestCase;
-use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\NullOutput;
 
-class FreshCommandTest extends TestCase
-{
-    /**
-     * @var MockObject
-     */
-    protected $migrator;
+it('does nothing if the migrator is not ready', function (): void {
+    $migrator = Mockery::mock(Migrator::class);
+    $repository = Mockery::mock(MigrationRepository::class);
+    $index = Mockery::mock(IndexManagerInterface::class);
 
-    /**
-     * @var MockObject
-     */
-    protected $migrationRepository;
+    app()->instance(Migrator::class, $migrator);
 
-    /**
-     * @var MockObject
-     */
-    protected $indexManager;
+    $migrator->shouldReceive('setOutput')->once()->andReturnSelf();
+    app()->instance(MigrationRepository::class, $repository);
+    app()->instance(IndexManagerInterface::class, $index);
 
-    /**
-     * @var FreshCommand
-     */
-    protected $command;
+    $command = new FreshCommand;
+    $command->setLaravel(app());
 
-    protected function setUp(): void
-    {
-        parent::setUp();
+    $migrator->shouldReceive('isReady')->once()->andReturnFalse();
+    $index->shouldNotReceive('drop');
+    $repository->shouldNotReceive('deleteAll');
+    $migrator->shouldNotReceive('migrateAll');
 
-        $this->migrator = $this->createMock(Migrator::class);
-        $this->app->instance(Migrator::class, $this->migrator);
+    expect($command->run(new ArrayInput(['--force' => true]), new NullOutput))->toBe(1);
+});
 
-        $this->migrationRepository = $this->createMock(MigrationRepository::class);
-        $this->app->instance(MigrationRepository::class, $this->migrationRepository);
+it('drops indices and migrations', function (): void {
+    $migrator = Mockery::mock(Migrator::class);
+    $repository = Mockery::mock(MigrationRepository::class);
+    $index = Mockery::mock(IndexManagerInterface::class);
 
-        $this->indexManager = $this->createMock(IndexManagerInterface::class);
-        $this->app->instance(IndexManagerInterface::class, $this->indexManager);
+    app()->instance(Migrator::class, $migrator);
 
-        $this->command = new FreshCommand;
-        $this->command->setLaravel($this->app);
-    }
+    $migrator->shouldReceive('setOutput')->once()->andReturnSelf();
+    app()->instance(MigrationRepository::class, $repository);
+    app()->instance(IndexManagerInterface::class, $index);
 
-    public function test_does_nothing_if_migrator_is_not_ready(): void
-    {
-        $this->migrator
-            ->expects($this->once())
-            ->method('isReady')
-            ->willReturn(false);
+    $command = new FreshCommand;
+    $command->setLaravel(app());
 
-        $this->indexManager
-            ->expects($this->never())
-            ->method('drop');
+    $migrator->shouldReceive('isReady')->once()->andReturnTrue();
+    $index->shouldReceive('drop')->once()->with('*');
+    $repository->shouldReceive('deleteAll')->once();
+    $migrator->shouldReceive('migrateAll')->once();
 
-        $this->migrationRepository
-            ->expects($this->never())
-            ->method('deleteAll');
-
-        $this->migrator
-            ->expects($this->never())
-            ->method('migrateAll');
-
-        $result = $this->command->run(
-            new ArrayInput(['--force' => true]),
-            new NullOutput
-        );
-
-        $this->assertSame(1, $result);
-    }
-
-    public function test_drops_indices_and_migration(): void
-    {
-        $this->migrator
-            ->expects($this->once())
-            ->method('isReady')
-            ->willReturn(true);
-
-        $this->indexManager
-            ->expects($this->once())
-            ->method('drop')
-            ->with('*');
-
-        $this->migrationRepository
-            ->expects($this->once())
-            ->method('deleteAll');
-
-        $this->migrator
-            ->expects($this->once())
-            ->method('migrateAll');
-
-        $result = $this->command->run(
-            new ArrayInput(['--force' => true]),
-            new NullOutput
-        );
-
-        $this->assertSame(0, $result);
-    }
-}
+    expect($command->run(new ArrayInput(['--force' => true]), new NullOutput))->toBe(0);
+});

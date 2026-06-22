@@ -14,12 +14,16 @@ use Illuminate\Support\Str;
 class MakeCommand extends Command
 {
     /**
+     * The name and signature of the console command.
+     *
      * @var string
      */
     protected $signature = 'opensearch:make:migration 
         {name : The name of the migration}';
 
     /**
+     * The console command description.
+     *
      * @var string
      */
     protected $description = 'Create a new migration file';

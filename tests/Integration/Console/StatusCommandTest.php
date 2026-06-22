@@ -1,72 +1,36 @@
 <?php
 
-namespace DirectoryTree\OpenSearchMigrations\Tests\Integration\Console;
-
 use DirectoryTree\OpenSearchMigrations\Console\StatusCommand;
 use DirectoryTree\OpenSearchMigrations\Migrator;
-use DirectoryTree\OpenSearchMigrations\Tests\Integration\TestCase;
-use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\NullOutput;
 
-class StatusCommandTest extends TestCase
-{
-    /**
-     * @var MockObject
-     */
-    protected $migrator;
+it('does nothing if the migrator is not ready', function (): void {
+    $migrator = Mockery::mock(Migrator::class);
+    app()->instance(Migrator::class, $migrator);
 
-    /**
-     * @var StatusCommand
-     */
-    protected $command;
+    $migrator->shouldReceive('setOutput')->once()->andReturnSelf();
 
-    protected function setUp(): void
-    {
-        parent::setUp();
+    $command = new StatusCommand;
+    $command->setLaravel(app());
 
-        $this->migrator = $this->createMock(Migrator::class);
-        $this->app->instance(Migrator::class, $this->migrator);
+    $migrator->shouldReceive('isReady')->once()->andReturnFalse();
+    $migrator->shouldNotReceive('showStatus');
 
-        $this->command = new StatusCommand;
-        $this->command->setLaravel($this->app);
-    }
+    expect($command->run(new ArrayInput([]), new NullOutput))->toBe(1);
+});
 
-    public function test_does_nothing_if_migrator_is_not_ready(): void
-    {
-        $this->migrator
-            ->expects($this->once())
-            ->method('isReady')
-            ->willReturn(false);
+it('shows status when the migrator is ready', function (): void {
+    $migrator = Mockery::mock(Migrator::class);
+    app()->instance(Migrator::class, $migrator);
 
-        $this->migrator
-            ->expects($this->never())
-            ->method('showStatus');
+    $migrator->shouldReceive('setOutput')->once()->andReturnSelf();
 
-        $result = $this->command->run(
-            new ArrayInput([]),
-            new NullOutput
-        );
+    $command = new StatusCommand;
+    $command->setLaravel(app());
 
-        $this->assertSame(1, $result);
-    }
+    $migrator->shouldReceive('isReady')->once()->andReturnTrue();
+    $migrator->shouldReceive('showStatus')->once();
 
-    public function test_displays_each_migration_status_if_migrator_is_ready(): void
-    {
-        $this->migrator
-            ->expects($this->once())
-            ->method('isReady')
-            ->willReturn(true);
-
-        $this->migrator
-            ->expects($this->once())
-            ->method('showStatus');
-
-        $result = $this->command->run(
-            new ArrayInput([]),
-            new NullOutput
-        );
-
-        $this->assertSame(0, $result);
-    }
-}
+    expect($command->run(new ArrayInput([]), new NullOutput))->toBe(0);
+});

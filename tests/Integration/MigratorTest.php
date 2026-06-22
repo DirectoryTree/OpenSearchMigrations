@@ -1,332 +1,245 @@
 <?php
 
-namespace DirectoryTree\OpenSearchMigrations\Tests\Integration;
-
 use DirectoryTree\OpenSearchMigrations\Facades\Index;
 use DirectoryTree\OpenSearchMigrations\Migrator;
 use Illuminate\Console\OutputStyle;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use PHPUnit\Framework\MockObject\MockObject;
 
-class MigratorTest extends TestCase
+uses(RefreshDatabase::class);
+
+function seededMigrator(OutputStyle $output): array
 {
-    use RefreshDatabase;
+    $table = config('opensearch-migrations.table');
 
-    /**
-     * @var string
-     */
-    protected $table;
+    DB::table($table)->insert([
+        ['migration' => '2018_12_01_081000_create_test_index', 'batch' => 1],
+    ]);
 
-    /**
-     * @var MockObject
-     */
-    protected $output;
-
-    /**
-     * @var Migrator
-     */
-    protected $migrator;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->table = config('opensearch-migrations.table');
-        $this->output = $this->createMock(OutputStyle::class);
-        $this->migrator = resolve(Migrator::class)->setOutput($this->output);
-
-        // create fixtures
-        DB::table($this->table)->insert([
-            ['migration' => '2018_12_01_081000_create_test_index', 'batch' => 1],
-        ]);
-    }
-
-    /**
-     * Expect the given output lines in order.
-     *
-     * @param  array<int, string>  $lines
-     */
-    protected function expectOutputLines(array $lines): void
-    {
-        $index = 0;
-
-        $this->output
-            ->expects($this->exactly(count($lines)))
-            ->method('writeln')
-            ->willReturnCallback(function (string $line) use ($lines, &$index) {
-                $this->assertSame($lines[$index], $line);
-
-                $index++;
-            });
-    }
-
-    public function test_single_migration_can_not_be_executed_if_file_does_not_exist(): void
-    {
-        $this->output
-            ->expects($this->once())
-            ->method('writeln')
-            ->with('<error>Migration is not found:</error> 3020_11_01_045023_drop_test_index');
-
-        $this->assertSame(
-            $this->migrator,
-            $this->migrator->migrateOne('3020_11_01_045023_drop_test_index')
-        );
-    }
-
-    public function test_single_migration_can_be_executed_if_file_exists(): void
-    {
-        Index::shouldReceive('putMapping')->once();
-
-        $this->expectOutputLines([
-            '<comment>Migrating:</comment> 2019_08_10_142230_update_test_index_mapping',
-            '<info>Migrated:</info> 2019_08_10_142230_update_test_index_mapping',
-        ]);
-
-        $this->assertSame(
-            $this->migrator,
-            $this->migrator->migrateOne('2019_08_10_142230_update_test_index_mapping')
-        );
-
-        $this->assertDatabaseHas($this->table, [
-            'migration' => '2019_08_10_142230_update_test_index_mapping',
-            'batch' => 2,
-        ]);
-    }
-
-    public function test_all_migrations_can_not_be_executed_if_directory_is_empty(): void
-    {
-        // create a temporary empty directory and reconfigure the package to use it
-        $tmpDirectory = config('opensearch-migrations.storage_directory').'/tmp';
-
-        @mkdir($tmpDirectory);
-        $this->app['config']->set('opensearch-migrations.storage_directory', $tmpDirectory);
-
-        // check that there is nothing to migrate
-        $this->output
-            ->expects($this->once())
-            ->method('writeln')
-            ->with('<info>Nothing to migrate</info>');
-
-        // create a new instance to apply the new config
-        $migrator = resolve(Migrator::class)->setOutput($this->output);
-
-        $this->assertSame($migrator, $migrator->migrateAll());
-
-        // remove the temporary directory
-        @rmdir($tmpDirectory);
-    }
-
-    public function test_all_migrations_can_be_executed_if_directory_is_not_empty(): void
-    {
-        Index::shouldReceive('putMapping')->once();
-
-        $this->expectOutputLines([
-            '<comment>Migrating:</comment> 2019_08_10_142230_update_test_index_mapping',
-            '<info>Migrated:</info> 2019_08_10_142230_update_test_index_mapping',
-        ]);
-
-        $this->assertSame(
-            $this->migrator,
-            $this->migrator->migrateAll()
-        );
-
-        $this->assertDatabaseHas($this->table, [
-            'migration' => '2019_08_10_142230_update_test_index_mapping',
-            'batch' => 2,
-        ]);
-    }
-
-    public function test_single_migration_can_not_be_rolled_back_if_file_does_not_exist(): void
-    {
-        $this->output
-            ->expects($this->once())
-            ->method('writeln')
-            ->with('<error>Migration is not found:</error> 3020_11_01_045023_drop_test_index');
-
-        $this->assertSame(
-            $this->migrator,
-            $this->migrator->rollbackOne('3020_11_01_045023_drop_test_index')
-        );
-    }
-
-    public function test_single_migration_can_not_be_rolled_back_if_file_is_not_yet_migrated(): void
-    {
-        $this->output
-            ->expects($this->once())
-            ->method('writeln')
-            ->with('<error>Migration is not yet migrated:</error> 2019_08_10_142230_update_test_index_mapping');
-
-        $this->assertSame(
-            $this->migrator,
-            $this->migrator->rollbackOne('2019_08_10_142230_update_test_index_mapping')
-        );
-    }
-
-    public function test_single_migration_can_be_rolled_back_if_file_exists_and_is_migrated(): void
-    {
-        Index::shouldReceive('drop')->once();
-
-        $this->expectOutputLines([
-            '<comment>Rolling back:</comment> 2018_12_01_081000_create_test_index',
-            '<info>Rolled back:</info> 2018_12_01_081000_create_test_index',
-        ]);
-
-        $this->assertSame(
-            $this->migrator,
-            $this->migrator->rollbackOne('2018_12_01_081000_create_test_index')
-        );
-
-        $this->assertDatabaseMissing($this->table, [
-            'migration' => '2018_12_01_081000_create_test_index',
-            'batch' => 1,
-        ]);
-    }
-
-    public function test_last_batch_can_not_be_rolled_back_if_some_files_are_missing(): void
-    {
-        // imitate, that migration has already been migrated
-        DB::table($this->table)->insert([
-            ['migration' => '2019_03_10_101500_create_test_index', 'batch' => 2],
-        ]);
-
-        $this->output
-            ->expects($this->once())
-            ->method('writeln')
-            ->with('<error>Migration is not found:</error> 2019_03_10_101500_create_test_index');
-
-        $this->assertSame(
-            $this->migrator,
-            $this->migrator->rollbackLastBatch()
-        );
-    }
-
-    public function test_last_batch_can_be_rolled_back_if_all_files_are_present(): void
-    {
-        // imitate, that migration has already been migrated
-        DB::table($this->table)->insert([
-            ['migration' => '2019_08_10_142230_update_test_index_mapping', 'batch' => 4],
-        ]);
-
-        Index::shouldReceive('putMapping')->once();
-
-        $this->expectOutputLines([
-            '<comment>Rolling back:</comment> 2019_08_10_142230_update_test_index_mapping',
-            '<info>Rolled back:</info> 2019_08_10_142230_update_test_index_mapping',
-        ]);
-
-        $this->assertSame(
-            $this->migrator,
-            $this->migrator->rollbackLastBatch()
-        );
-
-        $this->assertDatabaseMissing($this->table, [
-            'migration' => '2019_08_10_142230_update_test_index_mapping',
-            'batch' => 4,
-        ]);
-    }
-
-    public function test_all_migrations_can_not_be_rolled_back_if_some_files_are_missing(): void
-    {
-        // imitate, that migrations have already been migrated
-        DB::table($this->table)->insert([
-            ['migration' => '2019_03_10_101500_create_test_index', 'batch' => 2],
-            ['migration' => '2019_01_01_053550_drop_test_index', 'batch' => 2],
-        ]);
-
-        $this->output
-            ->expects($this->once())
-            ->method('writeln')
-            ->with('<error>Migration is not found:</error> 2019_03_10_101500_create_test_index,2019_01_01_053550_drop_test_index');
-
-        $this->assertSame(
-            $this->migrator,
-            $this->migrator->rollbackAll()
-        );
-    }
-
-    public function test_all_migrations_can_be_rolled_back_if_all_files_are_present(): void
-    {
-        // imitate, that migration has already been migrated
-        DB::table($this->table)->insert([
-            ['migration' => '2019_08_10_142230_update_test_index_mapping', 'batch' => 2],
-        ]);
-
-        Index::shouldReceive('putMapping')->once();
-        Index::shouldReceive('drop')->once();
-
-        $this->expectOutputLines([
-            '<comment>Rolling back:</comment> 2019_08_10_142230_update_test_index_mapping',
-            '<info>Rolled back:</info> 2019_08_10_142230_update_test_index_mapping',
-            '<comment>Rolling back:</comment> 2018_12_01_081000_create_test_index',
-            '<info>Rolled back:</info> 2018_12_01_081000_create_test_index',
-        ]);
-
-        $this->assertSame(
-            $this->migrator,
-            $this->migrator->rollbackAll()
-        );
-
-        $this->assertDatabaseMissing($this->table, [
-            'migration' => '2019_08_10_142230_update_test_index_mapping',
-            'batch' => 2,
-        ]);
-
-        $this->assertDatabaseMissing($this->table, [
-            'migration' => '2018_12_01_081000_create_test_index',
-            'batch' => 1,
-        ]);
-    }
-
-    public function test_status_is_displayed_correctly(): void
-    {
-        $this->output
-            ->expects($this->once())
-            ->method('table')
-            ->with(
-                ['Ran?', 'Last batch?', 'Migration'],
-                [
-                    ['<info>Yes</info>', '<info>Yes</info>', '2018_12_01_081000_create_test_index'],
-                    ['<comment>No</comment>', '<comment>No</comment>', '2019_08_10_142230_update_test_index_mapping'],
-                ]
-            );
-
-        $this->assertSame(
-            $this->migrator,
-            $this->migrator->showStatus()
-        );
-    }
-
-    public function test_migrator_is_ready_when_repository_and_storage_are_ready(): void
-    {
-        $this->assertTrue($this->migrator->isReady());
-    }
-
-    public function test_migrator_is_not_ready_when_repository_is_not_ready(): void
-    {
-        Schema::drop($this->table);
-
-        $this->output
-            ->expects($this->once())
-            ->method('writeln')
-            ->with('<error>Migration table is not yet created</error>');
-
-        $this->assertFalse($this->migrator->isReady());
-    }
-
-    public function test_migrator_is_not_ready_when_storage_is_not_ready(): void
-    {
-        $this->app['config']->set('opensearch-migrations.storage_directory', '/non_existing_directory');
-
-        $this->output
-            ->expects($this->once())
-            ->method('writeln')
-            ->with('<error>Migration directory is not yet created</error>');
-
-        // create a new instance to apply the new config
-        $migrator = resolve(Migrator::class)->setOutput($this->output);
-
-        $this->assertFalse($migrator->isReady());
-    }
+    return [$table, resolve(Migrator::class)->setOutput($output)];
 }
+
+function outputExpectingLines(array $lines): OutputStyle
+{
+    $output = Mockery::mock(OutputStyle::class);
+
+    foreach ($lines as $line) {
+        $output->shouldReceive('writeln')->once()->ordered()->with($line);
+    }
+
+    return $output;
+}
+
+it('does not run a missing single migration', function (): void {
+    $output = outputExpectingLines([
+        '<error>Migration is not found:</error> 3020_11_01_045023_drop_test_index',
+    ]);
+
+    [, $migrator] = seededMigrator($output);
+
+    expect($migrator->migrateOne('3020_11_01_045023_drop_test_index'))->toBe($migrator);
+});
+
+it('runs a single migration when it exists', function (): void {
+    Index::shouldReceive('putMapping')->once();
+
+    $output = outputExpectingLines([
+        '<comment>Migrating:</comment> 2019_08_10_142230_update_test_index_mapping',
+        '<info>Migrated:</info> 2019_08_10_142230_update_test_index_mapping',
+    ]);
+
+    [$table, $migrator] = seededMigrator($output);
+
+    expect($migrator->migrateOne('2019_08_10_142230_update_test_index_mapping'))->toBe($migrator);
+    expect(DB::table($table)->where([
+        'migration' => '2019_08_10_142230_update_test_index_mapping',
+        'batch' => 2,
+    ])->exists())->toBeTrue();
+});
+
+it('does not run all migrations when the directory is empty', function (): void {
+    $tmpDirectory = config('opensearch-migrations.storage_directory').'/tmp';
+
+    @mkdir($tmpDirectory);
+    config()->set('opensearch-migrations.storage_directory', $tmpDirectory);
+
+    $output = outputExpectingLines(['<info>Nothing to migrate</info>']);
+
+    seededMigrator($output);
+
+    $migrator = resolve(Migrator::class)->setOutput($output);
+
+    expect($migrator->migrateAll())->toBe($migrator);
+
+    @rmdir($tmpDirectory);
+});
+
+it('runs all outstanding migrations', function (): void {
+    Index::shouldReceive('putMapping')->once();
+
+    $output = outputExpectingLines([
+        '<comment>Migrating:</comment> 2019_08_10_142230_update_test_index_mapping',
+        '<info>Migrated:</info> 2019_08_10_142230_update_test_index_mapping',
+    ]);
+
+    [$table, $migrator] = seededMigrator($output);
+
+    expect($migrator->migrateAll())->toBe($migrator);
+    expect(DB::table($table)->where([
+        'migration' => '2019_08_10_142230_update_test_index_mapping',
+        'batch' => 2,
+    ])->exists())->toBeTrue();
+});
+
+it('does not roll back a missing single migration', function (): void {
+    $output = outputExpectingLines([
+        '<error>Migration is not found:</error> 3020_11_01_045023_drop_test_index',
+    ]);
+
+    [, $migrator] = seededMigrator($output);
+
+    expect($migrator->rollbackOne('3020_11_01_045023_drop_test_index'))->toBe($migrator);
+});
+
+it('does not roll back a migration that has not run', function (): void {
+    $output = outputExpectingLines([
+        '<error>Migration is not yet migrated:</error> 2019_08_10_142230_update_test_index_mapping',
+    ]);
+
+    [, $migrator] = seededMigrator($output);
+
+    expect($migrator->rollbackOne('2019_08_10_142230_update_test_index_mapping'))->toBe($migrator);
+});
+
+it('rolls back a migrated single migration', function (): void {
+    Index::shouldReceive('drop')->once();
+
+    $output = outputExpectingLines([
+        '<comment>Rolling back:</comment> 2018_12_01_081000_create_test_index',
+        '<info>Rolled back:</info> 2018_12_01_081000_create_test_index',
+    ]);
+
+    [$table, $migrator] = seededMigrator($output);
+
+    expect($migrator->rollbackOne('2018_12_01_081000_create_test_index'))->toBe($migrator);
+    expect(DB::table($table)->where([
+        'migration' => '2018_12_01_081000_create_test_index',
+        'batch' => 1,
+    ])->exists())->toBeFalse();
+});
+
+it('does not roll back the last batch when some files are missing', function (): void {
+    $output = outputExpectingLines([
+        '<error>Migration is not found:</error> 2019_03_10_101500_create_test_index',
+    ]);
+
+    [$table, $migrator] = seededMigrator($output);
+
+    DB::table($table)->insert([
+        ['migration' => '2019_03_10_101500_create_test_index', 'batch' => 2],
+    ]);
+
+    expect($migrator->rollbackLastBatch())->toBe($migrator);
+});
+
+it('rolls back the last batch when all files are present', function (): void {
+    Index::shouldReceive('putMapping')->once();
+
+    $output = outputExpectingLines([
+        '<comment>Rolling back:</comment> 2019_08_10_142230_update_test_index_mapping',
+        '<info>Rolled back:</info> 2019_08_10_142230_update_test_index_mapping',
+    ]);
+
+    [$table, $migrator] = seededMigrator($output);
+
+    DB::table($table)->insert([
+        ['migration' => '2019_08_10_142230_update_test_index_mapping', 'batch' => 4],
+    ]);
+
+    expect($migrator->rollbackLastBatch())->toBe($migrator);
+    expect(DB::table($table)->where([
+        'migration' => '2019_08_10_142230_update_test_index_mapping',
+        'batch' => 4,
+    ])->exists())->toBeFalse();
+});
+
+it('does not roll back all migrations when some files are missing', function (): void {
+    $output = outputExpectingLines([
+        '<error>Migration is not found:</error> 2019_03_10_101500_create_test_index,2019_01_01_053550_drop_test_index',
+    ]);
+
+    [$table, $migrator] = seededMigrator($output);
+
+    DB::table($table)->insert([
+        ['migration' => '2019_03_10_101500_create_test_index', 'batch' => 2],
+        ['migration' => '2019_01_01_053550_drop_test_index', 'batch' => 2],
+    ]);
+
+    expect($migrator->rollbackAll())->toBe($migrator);
+});
+
+it('rolls back all migrations when all files are present', function (): void {
+    Index::shouldReceive('putMapping')->once();
+    Index::shouldReceive('drop')->once();
+
+    $output = outputExpectingLines([
+        '<comment>Rolling back:</comment> 2019_08_10_142230_update_test_index_mapping',
+        '<info>Rolled back:</info> 2019_08_10_142230_update_test_index_mapping',
+        '<comment>Rolling back:</comment> 2018_12_01_081000_create_test_index',
+        '<info>Rolled back:</info> 2018_12_01_081000_create_test_index',
+    ]);
+
+    [$table, $migrator] = seededMigrator($output);
+
+    DB::table($table)->insert([
+        ['migration' => '2019_08_10_142230_update_test_index_mapping', 'batch' => 2],
+    ]);
+
+    expect($migrator->rollbackAll())->toBe($migrator);
+    expect(DB::table($table)->where('migration', '2019_08_10_142230_update_test_index_mapping')->exists())->toBeFalse();
+    expect(DB::table($table)->where('migration', '2018_12_01_081000_create_test_index')->exists())->toBeFalse();
+});
+
+it('displays status', function (): void {
+    $output = Mockery::mock(OutputStyle::class);
+
+    $output->shouldReceive('table')->once()->with(
+        ['Ran?', 'Last batch?', 'Migration'],
+        [
+            ['<info>Yes</info>', '<info>Yes</info>', '2018_12_01_081000_create_test_index'],
+            ['<comment>No</comment>', '<comment>No</comment>', '2019_08_10_142230_update_test_index_mapping'],
+        ]
+    );
+
+    [, $migrator] = seededMigrator($output);
+
+    expect($migrator->showStatus())->toBe($migrator);
+});
+
+it('is ready when the repository and storage are ready', function (): void {
+    [, $migrator] = seededMigrator(Mockery::mock(OutputStyle::class));
+
+    expect($migrator->isReady())->toBeTrue();
+});
+
+it('is not ready when the repository is not ready', function (): void {
+    $output = outputExpectingLines(['<error>Migration table is not yet created</error>']);
+    [$table, $migrator] = seededMigrator($output);
+
+    Schema::drop($table);
+
+    expect($migrator->isReady())->toBeFalse();
+});
+
+it('is not ready when the storage is not ready', function (): void {
+    config()->set('opensearch-migrations.storage_directory', '/non_existing_directory');
+
+    $output = outputExpectingLines(['<error>Migration directory is not yet created</error>']);
+
+    seededMigrator($output);
+
+    $migrator = resolve(Migrator::class)->setOutput($output);
+
+    expect($migrator->isReady())->toBeFalse();
+});

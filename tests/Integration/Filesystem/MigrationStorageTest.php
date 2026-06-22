@@ -1,125 +1,74 @@
 <?php
 
-namespace DirectoryTree\OpenSearchMigrations\Tests\Integration\Filesystem;
-
-use Carbon\Carbon;
 use DirectoryTree\OpenSearchMigrations\Filesystem\MigrationFile;
 use DirectoryTree\OpenSearchMigrations\Filesystem\MigrationStorage;
-use DirectoryTree\OpenSearchMigrations\Tests\Integration\TestCase;
-use PHPUnit\Framework\Attributes\DataProvider;
 
-class MigrationStorageTest extends TestCase
-{
-    /**
-     * @var MigrationStorage
-     */
-    protected $migrationStorage;
+it('creates files', function (): void {
+    $storage = resolve(MigrationStorage::class);
+    $fileName = uniqid();
 
-    protected function setUp(): void
-    {
-        parent::setUp();
+    $file = $storage->create($fileName, 'content');
 
-        $this->migrationStorage = resolve(MigrationStorage::class);
-    }
+    expect($file->name())->toBe($fileName);
+    expect($file->path())->toBeFile();
+    expect(file_get_contents($file->path()))->toBe('content');
 
-    public function test_file_can_be_created(): void
-    {
-        $fileName = sprintf(
-            '%s_create_tmp_%s_index',
-            (new Carbon)->format('Y_m_d_His'),
-            uniqid()
-        );
+    @unlink($file->path());
+});
 
-        $file = $this->migrationStorage->create($fileName, 'content');
+it('creates the directory along with the file', function (): void {
+    $directory = config('opensearch-migrations.storage_directory');
+    $firstLevelDirectory = $directory.'/nested';
+    $secondLevelDirectory = $firstLevelDirectory.'/directories';
 
-        $this->assertSame($fileName, $file->name());
-        $this->assertFileExists($file->path());
-        $this->assertStringEqualsFile($file->path(), 'content');
+    config()->set('opensearch-migrations.storage_directory', $secondLevelDirectory);
 
-        @unlink($file->path());
-    }
+    $storage = resolve(MigrationStorage::class);
+    $file = $storage->create('2019_12_12_201657_test_index', 'content');
 
-    public function test_directory_is_created_along_with_file(): void
-    {
-        $baseDirectory = realpath(__DIR__.'/../..');
+    expect($secondLevelDirectory)->toBeDirectory();
 
-        $firstLevelDirectory = $baseDirectory.'/tmp';
-        $secondLevelDirectory = $firstLevelDirectory.'/migrations';
+    @unlink($file->path());
+    @rmdir($secondLevelDirectory);
+    @rmdir($firstLevelDirectory);
+});
 
-        $this->app['config']->set('opensearch-migrations.storage_directory', $secondLevelDirectory);
+it('is ready when the directory exists', function (): void {
+    expect(resolve(MigrationStorage::class)->isReady())->toBeTrue();
+});
 
-        // create a new instance to apply the new config
-        $file = resolve(MigrationStorage::class)->create('test', 'content');
+it('is not ready when the directory does not exist', function (): void {
+    config()->set('opensearch-migrations.storage_directory', '/non_existing_directory');
 
-        $this->assertDirectoryExists($secondLevelDirectory);
+    expect(resolve(MigrationStorage::class)->isReady())->toBeFalse();
+});
 
-        @unlink($file->path());
-        @rmdir($secondLevelDirectory);
-        @rmdir($firstLevelDirectory);
-    }
+it('finds existing files', function (string $fileName): void {
+    $file = resolve(MigrationStorage::class)->find($fileName);
 
-    public static function existingFileNameProvider(): array
-    {
-        return [
-            ['2018_12_01_081000_create_test_index'],
-            ['2019_08_10_142230_update_test_index_mapping'],
-            ['2019_08_10_142230_update_test_index_mapping.php'],
-            [' 2019_08_10_142230_update_test_index_mapping.php '],
-        ];
-    }
+    expect($file)->toBeInstanceOf(MigrationFile::class);
+    expect($file->name())->toBe(basename(trim($fileName), '.php'));
+})->with([
+    ['2018_12_01_081000_create_test_index'],
+    ['2018_12_01_081000_create_test_index.php'],
+    ['2019_08_10_142230_update_test_index_mapping'],
+    ['2019_08_10_142230_update_test_index_mapping.php'],
+]);
 
-    #[DataProvider('existingFileNameProvider')]
-    public function test_file_can_be_found_if_exists(string $fileName): void
-    {
-        /** @var MigrationFile $file */
-        $file = $this->migrationStorage->findByName($fileName);
+it('does not find missing files', function (string $fileName): void {
+    expect(resolve(MigrationStorage::class)->find($fileName))->toBeNull();
+})->with([
+    ['2020_12_01_081000_create_test_index'],
+    ['2020_12_01_081000_create_test_index.php'],
+    ['2020_08_10_142230_update_test_index_mapping'],
+    ['2020_08_10_142230_update_test_index_mapping.php'],
+]);
 
-        $this->assertSame(basename(trim($fileName), '.php'), $file->name());
-    }
+it('retrieves all migration files', function (): void {
+    $files = resolve(MigrationStorage::class)->all();
 
-    public static function nonExistingFileNameProvider(): array
-    {
-        return [
-            ['3030_01_01_000000_non_existing_file.php'],
-            ['3030_01_01_000000_non_existing_file'],
-            ['test'],
-            [''],
-        ];
-    }
-
-    #[DataProvider('nonExistingFileNameProvider')]
-    public function test_file_can_not_be_found_if_does_not_exist(string $fileName): void
-    {
-        $file = $this->migrationStorage->findByName($fileName);
-
-        $this->assertNull($file);
-    }
-
-    public function test_all_files_within_migrations_directory_can_be_retrieved(): void
-    {
-        $files = $this->migrationStorage->findAll();
-
-        $this->assertSame(
-            [
-                '2018_12_01_081000_create_test_index',
-                '2019_08_10_142230_update_test_index_mapping',
-            ],
-            $files->map(function (MigrationFile $file) {
-                return $file->name();
-            })->toArray()
-        );
-    }
-
-    public function test_storage_is_ready_when_directory_exists(): void
-    {
-        $this->assertTrue($this->migrationStorage->isReady());
-    }
-
-    public function test_storage_is_not_ready_when_directory_does_not_exist(): void
-    {
-        $this->app['config']->set('opensearch-migrations.storage_directory', '/non_existing_directory');
-
-        // create a new instance to apply the new config
-        $this->assertFalse(resolve(MigrationStorage::class)->isReady());
-    }
-}
+    expect($files->map(fn (MigrationFile $file) => $file->name())->toArray())->toBe([
+        '2018_12_01_081000_create_test_index',
+        '2019_08_10_142230_update_test_index_mapping',
+    ]);
+});

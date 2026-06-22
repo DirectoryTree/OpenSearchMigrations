@@ -3,6 +3,7 @@
 namespace DirectoryTree\OpenSearchMigrations;
 
 use DirectoryTree\OpenSearchAdapter\Indices\IndexManager;
+use DirectoryTree\OpenSearchAdapter\Indices\IndexManagerInterface as AdapterIndexManagerInterface;
 use DirectoryTree\OpenSearchClient\OpenSearchManager;
 use DirectoryTree\OpenSearchMigrations\Adapters\IndexManagerAdapter;
 use DirectoryTree\OpenSearchMigrations\Console\FreshCommand;
@@ -64,6 +65,8 @@ class OpenSearchMigrationsServiceProvider extends ServiceProvider
         $this->app->singleton(IndexManager::class, function (Application $app) {
             return new IndexManager($app->make(OpenSearchManager::class)->default());
         });
+
+        $this->app->bind(AdapterIndexManagerInterface::class, IndexManager::class);
     }
 
     /**

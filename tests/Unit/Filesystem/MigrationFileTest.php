@@ -1,27 +1,13 @@
 <?php
 
-namespace DirectoryTree\OpenSearchMigrations\Tests\Unit\Filesystem;
-
 use DirectoryTree\OpenSearchMigrations\Filesystem\MigrationFile;
-use PHPUnit\Framework\TestCase;
 
-class MigrationFileTest extends TestCase
-{
-    protected const FULL_PATH = '/tmp/test.php';
+const FULL_PATH = '/tmp/test.php';
 
-    public function test_path_getter(): void
-    {
-        $this->assertSame(
-            static::FULL_PATH,
-            (new MigrationFile(static::FULL_PATH))->path()
-        );
-    }
+it('gets the full migration file path', function (): void {
+    expect((new MigrationFile(FULL_PATH))->path())->toBe(FULL_PATH);
+});
 
-    public function test_name_getter(): void
-    {
-        $this->assertSame(
-            basename(static::FULL_PATH, '.php'),
-            (new MigrationFile(static::FULL_PATH))->name()
-        );
-    }
-}
+it('gets the migration file name without its extension', function (): void {
+    expect((new MigrationFile(FULL_PATH))->name())->toBe(basename(FULL_PATH, '.php'));
+});

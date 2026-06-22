@@ -1,96 +1,52 @@
 <?php
 
-namespace DirectoryTree\OpenSearchMigrations\Tests\Integration\Console;
-
 use DirectoryTree\OpenSearchMigrations\Console\MigrateCommand;
 use DirectoryTree\OpenSearchMigrations\Migrator;
-use DirectoryTree\OpenSearchMigrations\Tests\Integration\TestCase;
-use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\NullOutput;
 
-class MigrateCommandTest extends TestCase
-{
-    /**
-     * @var MockObject
-     */
-    protected $migrator;
+it('does nothing if the migrator is not ready', function (): void {
+    $migrator = Mockery::mock(Migrator::class);
+    app()->instance(Migrator::class, $migrator);
 
-    /**
-     * @var MigrateCommand
-     */
-    protected $command;
+    $migrator->shouldReceive('setOutput')->once()->andReturnSelf();
 
-    protected function setUp(): void
-    {
-        parent::setUp();
+    $command = new MigrateCommand;
+    $command->setLaravel(app());
 
-        $this->migrator = $this->createMock(Migrator::class);
-        $this->app->instance(Migrator::class, $this->migrator);
+    $migrator->shouldReceive('isReady')->once()->andReturnFalse();
+    $migrator->shouldNotReceive('migrateOne');
+    $migrator->shouldNotReceive('migrateAll');
 
-        $this->command = new MigrateCommand;
-        $this->command->setLaravel($this->app);
-    }
+    expect($command->run(new ArrayInput(['--force' => true]), new NullOutput))->toBe(1);
+});
 
-    public function test_does_nothing_if_migrator_is_not_ready(): void
-    {
-        $this->migrator
-            ->expects($this->once())
-            ->method('isReady')
-            ->willReturn(false);
+it('runs one migration when a file name is provided', function (): void {
+    $migrator = Mockery::mock(Migrator::class);
+    app()->instance(Migrator::class, $migrator);
 
-        $this->migrator
-            ->expects($this->never())
-            ->method('migrateOne');
+    $migrator->shouldReceive('setOutput')->once()->andReturnSelf();
 
-        $this->migrator
-            ->expects($this->never())
-            ->method('migrateAll');
+    $command = new MigrateCommand;
+    $command->setLaravel(app());
 
-        $result = $this->command->run(
-            new ArrayInput(['--force' => true]),
-            new NullOutput
-        );
+    $migrator->shouldReceive('isReady')->once()->andReturnTrue();
+    $migrator->shouldReceive('migrateOne')->once()->with('test_file_name');
 
-        $this->assertSame(1, $result);
-    }
+    expect($command->run(new ArrayInput(['--force' => true, 'fileName' => 'test_file_name']), new NullOutput))->toBe(0);
+});
 
-    public function test_runs_one_migration_if_file_name_is_provided(): void
-    {
-        $this->migrator
-            ->expects($this->once())
-            ->method('isReady')
-            ->willReturn(true);
+it('runs all migrations when a file name is not provided', function (): void {
+    $migrator = Mockery::mock(Migrator::class);
+    app()->instance(Migrator::class, $migrator);
 
-        $this->migrator
-            ->expects($this->once())
-            ->method('migrateOne')
-            ->with('test_file_name');
+    $migrator->shouldReceive('setOutput')->once()->andReturnSelf();
 
-        $result = $this->command->run(
-            new ArrayInput(['--force' => true, 'fileName' => 'test_file_name']),
-            new NullOutput
-        );
+    $command = new MigrateCommand;
+    $command->setLaravel(app());
 
-        $this->assertSame(0, $result);
-    }
+    $migrator->shouldReceive('isReady')->once()->andReturnTrue();
+    $migrator->shouldReceive('migrateAll')->once();
 
-    public function test_runs_all_migrations_if_file_name_is_not_provided(): void
-    {
-        $this->migrator
-            ->expects($this->once())
-            ->method('isReady')
-            ->willReturn(true);
-
-        $this->migrator
-            ->expects($this->once())
-            ->method('migrateAll');
-
-        $result = $this->command->run(
-            new ArrayInput(['--force' => true]),
-            new NullOutput
-        );
-
-        $this->assertSame(0, $result);
-    }
-}
+    expect($command->run(new ArrayInput(['--force' => true]), new NullOutput))->toBe(0);
+});

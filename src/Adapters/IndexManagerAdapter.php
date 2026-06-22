@@ -4,7 +4,7 @@ namespace DirectoryTree\OpenSearchMigrations\Adapters;
 
 use DirectoryTree\OpenSearchAdapter\Indices\Alias;
 use DirectoryTree\OpenSearchAdapter\Indices\IndexBlueprint;
-use DirectoryTree\OpenSearchAdapter\Indices\IndexManager;
+use DirectoryTree\OpenSearchAdapter\Indices\IndexManagerInterface as AdapterIndexManagerInterface;
 use DirectoryTree\OpenSearchAdapter\Indices\Mapping;
 use DirectoryTree\OpenSearchAdapter\Indices\Settings;
 use DirectoryTree\OpenSearchMigrations\IndexManagerInterface;
@@ -19,7 +19,7 @@ class IndexManagerAdapter implements IndexManagerInterface
      * Create a new index manager adapter instance.
      */
     public function __construct(
-        protected IndexManager $indexManager
+        protected AdapterIndexManagerInterface $indexManager
     ) {}
 
     /**

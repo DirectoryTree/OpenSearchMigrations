@@ -47,7 +47,7 @@
             "url": "../OpenSearchAdapter",
             "options": {
                 "versions": {
-                    "directorytree/opensearch-adapter": "1.0.0"
+                    "directorytree/opensearch-adapter": "1.0.1"
                 }
             }
         },

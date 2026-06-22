@@ -1,72 +1,36 @@
 <?php
 
-namespace DirectoryTree\OpenSearchMigrations\Tests\Integration\Console;
-
 use DirectoryTree\OpenSearchMigrations\Console\ResetCommand;
 use DirectoryTree\OpenSearchMigrations\Migrator;
-use DirectoryTree\OpenSearchMigrations\Tests\Integration\TestCase;
-use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\NullOutput;
 
-class ResetCommandTest extends TestCase
-{
-    /**
-     * @var MockObject
-     */
-    protected $migrator;
+it('does nothing if the migrator is not ready', function (): void {
+    $migrator = Mockery::mock(Migrator::class);
+    app()->instance(Migrator::class, $migrator);
 
-    /**
-     * @var ResetCommand
-     */
-    protected $command;
+    $migrator->shouldReceive('setOutput')->once()->andReturnSelf();
 
-    protected function setUp(): void
-    {
-        parent::setUp();
+    $command = new ResetCommand;
+    $command->setLaravel(app());
 
-        $this->migrator = $this->createMock(Migrator::class);
-        $this->app->instance(Migrator::class, $this->migrator);
+    $migrator->shouldReceive('isReady')->once()->andReturnFalse();
+    $migrator->shouldNotReceive('rollbackAll');
 
-        $this->command = new ResetCommand;
-        $this->command->setLaravel($this->app);
-    }
+    expect($command->run(new ArrayInput(['--force' => true]), new NullOutput))->toBe(1);
+});
 
-    public function test_does_nothing_if_migrator_is_not_ready(): void
-    {
-        $this->migrator
-            ->expects($this->once())
-            ->method('isReady')
-            ->willReturn(false);
+it('rolls back all migrations when the migrator is ready', function (): void {
+    $migrator = Mockery::mock(Migrator::class);
+    app()->instance(Migrator::class, $migrator);
 
-        $this->migrator
-            ->expects($this->never())
-            ->method('rollbackAll');
+    $migrator->shouldReceive('setOutput')->once()->andReturnSelf();
 
-        $result = $this->command->run(
-            new ArrayInput(['--force' => true]),
-            new NullOutput
-        );
+    $command = new ResetCommand;
+    $command->setLaravel(app());
 
-        $this->assertSame(1, $result);
-    }
+    $migrator->shouldReceive('isReady')->once()->andReturnTrue();
+    $migrator->shouldReceive('rollbackAll')->once();
 
-    public function test_rollbacks_all_migrations_if_migrator_is_ready(): void
-    {
-        $this->migrator
-            ->expects($this->once())
-            ->method('isReady')
-            ->willReturn(true);
-
-        $this->migrator
-            ->expects($this->once())
-            ->method('rollbackAll');
-
-        $result = $this->command->run(
-            new ArrayInput(['--force' => true]),
-            new NullOutput
-        );
-
-        $this->assertSame(0, $result);
-    }
-}
+    expect($command->run(new ArrayInput(['--force' => true]), new NullOutput))->toBe(0);
+});
