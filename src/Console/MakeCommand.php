@@ -27,7 +27,7 @@ class MakeCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle(Filesystem $filesystem, MigrationStorage $migrationStorage): int
+    public function handle(Filesystem $filesystem, MigrationStorage $migrations): int
     {
         $name = Str::snake(trim($this->argument('name')));
 
@@ -37,7 +37,7 @@ class MakeCommand extends Command
         $stub = $filesystem->get(__DIR__.'/stubs/migration.blank.stub');
         $content = str_replace('DummyClass', $className, $stub);
 
-        $migrationStorage->create($fileName, $content);
+        $migrations->create($fileName, $content);
 
         $this->output->writeln('<info>Created migration:</info> '.$fileName);
 

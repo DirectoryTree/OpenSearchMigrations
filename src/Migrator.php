@@ -63,7 +63,7 @@ class Migrator implements ReadinessInterface
         $migratedFileNames = $this->migrationRepository->getAll();
 
         $nonMigratedFiles = $files->filter(function (MigrationFile $file) use ($migratedFileNames) {
-            return ! $migratedFileNames->contains($file->getName());
+            return ! $migratedFileNames->contains($file->name());
         });
 
         $this->migrate($nonMigratedFiles);
@@ -80,10 +80,10 @@ class Migrator implements ReadinessInterface
 
         if (is_null($file)) {
             $this->output->writeln('<error>Migration is not found:</error> '.$fileName);
-        } elseif (! $this->migrationRepository->exists($file->getName())) {
-            $this->output->writeln('<error>Migration is not yet migrated:</error> '.$file->getName());
+        } elseif (! $this->migrationRepository->exists($file->name())) {
+            $this->output->writeln('<error>Migration is not yet migrated:</error> '.$file->name());
         } else {
-            $this->rollback(collect([$file->getName()]));
+            $this->rollback(collect([$file->name()]));
         }
 
         return $this;
@@ -127,9 +127,9 @@ class Migrator implements ReadinessInterface
 
         $rows = $files->map(function (MigrationFile $file) use ($migratedFileNames, $migratedLastBatchFileNames) {
             return [
-                $migratedFileNames->contains($file->getName()) ? '<info>Yes</info>' : '<comment>No</comment>',
-                $migratedLastBatchFileNames->contains($file->getName()) ? '<info>Yes</info>' : '<comment>No</comment>',
-                $file->getName(),
+                $migratedFileNames->contains($file->name()) ? '<info>Yes</info>' : '<comment>No</comment>',
+                $migratedLastBatchFileNames->contains($file->name()) ? '<info>Yes</info>' : '<comment>No</comment>',
+                $file->name(),
             ];
         })->toArray();
 
@@ -154,14 +154,14 @@ class Migrator implements ReadinessInterface
         $nextBatchNumber = $this->migrationRepository->getLastBatchNumber() + 1;
 
         $files->each(function (MigrationFile $file) use ($nextBatchNumber) {
-            $this->output->writeln('<comment>Migrating:</comment> '.$file->getName());
+            $this->output->writeln('<comment>Migrating:</comment> '.$file->name());
 
             $migration = $this->migrationFactory->makeFromFile($file);
             $migration->up();
 
-            $this->migrationRepository->insert($file->getName(), $nextBatchNumber);
+            $this->migrationRepository->insert($file->name(), $nextBatchNumber);
 
-            $this->output->writeln('<info>Migrated:</info> '.$file->getName());
+            $this->output->writeln('<info>Migrated:</info> '.$file->name());
         });
 
         return $this;
@@ -186,7 +186,7 @@ class Migrator implements ReadinessInterface
             $this->output->writeln(
                 '<error>Migration is not found:</error> '.
                 implode(',', $fileNames->diff($files->map(function (MigrationFile $file) {
-                    return $file->getName();
+                    return $file->name();
                 }))->toArray())
             );
 
@@ -194,14 +194,14 @@ class Migrator implements ReadinessInterface
         }
 
         $files->each(function (MigrationFile $file) {
-            $this->output->writeln('<comment>Rolling back:</comment> '.$file->getName());
+            $this->output->writeln('<comment>Rolling back:</comment> '.$file->name());
 
             $migration = $this->migrationFactory->makeFromFile($file);
             $migration->down();
 
-            $this->migrationRepository->delete($file->getName());
+            $this->migrationRepository->delete($file->name());
 
-            $this->output->writeln('<info>Rolled back:</info> '.$file->getName());
+            $this->output->writeln('<info>Rolled back:</info> '.$file->name());
         });
 
         return $this;

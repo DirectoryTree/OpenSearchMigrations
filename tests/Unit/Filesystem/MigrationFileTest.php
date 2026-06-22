@@ -13,7 +13,7 @@ class MigrationFileTest extends TestCase
     {
         $this->assertSame(
             static::FULL_PATH,
-            (new MigrationFile(static::FULL_PATH))->getPath()
+            (new MigrationFile(static::FULL_PATH))->path()
         );
     }
 
@@ -21,7 +21,7 @@ class MigrationFileTest extends TestCase
     {
         $this->assertSame(
             basename(static::FULL_PATH, '.php'),
-            (new MigrationFile(static::FULL_PATH))->getName()
+            (new MigrationFile(static::FULL_PATH))->name()
         );
     }
 }

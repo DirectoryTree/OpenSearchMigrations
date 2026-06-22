@@ -32,11 +32,11 @@ class MigrationStorageTest extends TestCase
 
         $file = $this->migrationStorage->create($fileName, 'content');
 
-        $this->assertSame($fileName, $file->getName());
-        $this->assertFileExists($file->getPath());
-        $this->assertStringEqualsFile($file->getPath(), 'content');
+        $this->assertSame($fileName, $file->name());
+        $this->assertFileExists($file->path());
+        $this->assertStringEqualsFile($file->path(), 'content');
 
-        @unlink($file->getPath());
+        @unlink($file->path());
     }
 
     public function test_directory_is_created_along_with_file(): void
@@ -53,7 +53,7 @@ class MigrationStorageTest extends TestCase
 
         $this->assertDirectoryExists($secondLevelDirectory);
 
-        @unlink($file->getPath());
+        @unlink($file->path());
         @rmdir($secondLevelDirectory);
         @rmdir($firstLevelDirectory);
     }
@@ -74,7 +74,7 @@ class MigrationStorageTest extends TestCase
         /** @var MigrationFile $file */
         $file = $this->migrationStorage->findByName($fileName);
 
-        $this->assertSame(basename(trim($fileName), '.php'), $file->getName());
+        $this->assertSame(basename(trim($fileName), '.php'), $file->name());
     }
 
     public static function nonExistingFileNameProvider(): array
@@ -105,7 +105,7 @@ class MigrationStorageTest extends TestCase
                 '2019_08_10_142230_update_test_index_mapping',
             ],
             $files->map(function (MigrationFile $file) {
-                return $file->getName();
+                return $file->name();
             })->toArray()
         );
     }

@@ -31,8 +31,8 @@ class FreshCommand extends Command
      */
     public function handle(
         Migrator $migrator,
-        MigrationRepository $migrationRepository,
-        IndexManagerInterface $indexManager
+        IndexManagerInterface $index,
+        MigrationRepository $migrations,
     ): int {
         $migrator->setOutput($this->output);
 
@@ -40,9 +40,9 @@ class FreshCommand extends Command
             return 1;
         }
 
-        $indexManager->drop('*');
+        $index->drop('*');
 
-        $migrationRepository->deleteAll();
+        $migrations->deleteAll();
 
         $migrator->migrateAll();
 

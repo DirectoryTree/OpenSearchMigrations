@@ -17,7 +17,7 @@ class MigrationFile
     /**
      * Get the migration file name without its extension.
      */
-    public function getName(): string
+    public function name(): string
     {
         return basename($this->filePath, '.php');
     }
@@ -25,7 +25,7 @@ class MigrationFile
     /**
      * Get the full migration file path.
      */
-    public function getPath(): string
+    public function path(): string
     {
         return $this->filePath;
     }

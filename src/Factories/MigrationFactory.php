@@ -16,9 +16,9 @@ class MigrationFactory
      */
     public function makeFromFile(MigrationFile $file): MigrationInterface
     {
-        require_once $file->getPath();
+        require_once $file->path();
 
-        $className = Str::studly(implode('_', array_slice(explode('_', $file->getName()), 4)));
+        $className = Str::studly(implode('_', array_slice(explode('_', $file->name()), 4)));
 
         return resolve($className);
     }
