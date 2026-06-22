@@ -3,7 +3,7 @@
 namespace DirectoryTree\OpenSearchMigrations;
 
 use DirectoryTree\OpenSearchAdapter\Indices\IndexManager;
-use DirectoryTree\OpenSearchClient\ClientBuilderInterface;
+use DirectoryTree\OpenSearchClient\OpenSearchManager;
 use DirectoryTree\OpenSearchMigrations\Adapters\IndexManagerAdapter;
 use DirectoryTree\OpenSearchMigrations\Console\FreshCommand;
 use DirectoryTree\OpenSearchMigrations\Console\MakeCommand;
@@ -44,7 +44,7 @@ class OpenSearchMigrationsServiceProvider extends ServiceProvider
         $this->app->bindIf(IndexManagerInterface::class, IndexManagerAdapter::class);
 
         $this->app->singletonIf(IndexManager::class, function ($app) {
-            return new IndexManager($app->make(ClientBuilderInterface::class)->default());
+            return new IndexManager($app->make(OpenSearchManager::class)->default());
         });
     }
 

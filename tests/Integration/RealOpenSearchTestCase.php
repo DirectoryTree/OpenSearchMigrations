@@ -2,8 +2,8 @@
 
 namespace DirectoryTree\OpenSearchMigrations\Tests\Integration;
 
-use DirectoryTree\OpenSearchClient\ClientBuilderInterface;
 use DirectoryTree\OpenSearchClient\OpenSearchClientServiceProvider;
+use DirectoryTree\OpenSearchClient\OpenSearchManager;
 use DirectoryTree\OpenSearchMigrations\OpenSearchMigrationsServiceProvider;
 use OpenSearch\Client;
 use Orchestra\Testbench\TestCase as TestbenchTestCase;
@@ -37,7 +37,7 @@ class RealOpenSearchTestCase extends TestbenchTestCase
         $app['config']->set('opensearch-migrations.storage_directory', realpath(__DIR__.'/../real_migrations'));
 
         $app->bind(Client::class, function ($app) {
-            return $app->make(ClientBuilderInterface::class)->default();
+            return $app->make(OpenSearchManager::class)->default();
         });
     }
 
