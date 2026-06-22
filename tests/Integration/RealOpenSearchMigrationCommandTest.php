@@ -13,24 +13,24 @@ class RealOpenSearchMigrationCommandTest extends RealOpenSearchTestCase
 
     public function test_migration_commands_run_against_opensearch(): void
     {
-        $indexName = $this->indexPrefix.'real_test';
+        $index = $this->indexPrefix.'real_test';
         $aliasName = $this->indexPrefix.'real_alias';
 
         $this->artisan('opensearch:migrate', ['--force' => true])
             ->assertExitCode(0);
 
-        $this->assertTrue($this->client()->indices()->exists(['index' => $indexName]));
+        $this->assertTrue($this->client()->indices()->exists(['index' => $index]));
 
-        $mapping = $this->client()->indices()->getMapping(['index' => $indexName]);
+        $mapping = $this->client()->indices()->getMapping(['index' => $index]);
 
         $this->assertSame(
             'text',
-            $mapping[$indexName]['mappings']['properties']['title']['type'] ?? null
+            $mapping[$index]['mappings']['properties']['title']['type'] ?? null
         );
 
-        $aliases = $this->client()->indices()->getAlias(['index' => $indexName]);
+        $aliases = $this->client()->indices()->getAlias(['index' => $index]);
 
-        $this->assertArrayHasKey($aliasName, $aliases[$indexName]['aliases']);
+        $this->assertArrayHasKey($aliasName, $aliases[$index]['aliases']);
 
         $this->artisan('opensearch:migrate:status')
             ->assertExitCode(0);
@@ -47,18 +47,18 @@ class RealOpenSearchMigrationCommandTest extends RealOpenSearchTestCase
         $this->artisan('opensearch:migrate:reset', ['--force' => true])
             ->assertExitCode(0);
 
-        $this->assertFalse($this->client()->indices()->exists(['index' => $indexName]));
+        $this->assertFalse($this->client()->indices()->exists(['index' => $index]));
     }
 
     public function test_index_adapter_operations_run_against_opensearch(): void
     {
-        $index = app(IndexManagerInterface::class);
+        $indices = app(IndexManagerInterface::class);
 
-        $indexName = $this->indexPrefix.'adapter_real_test';
+        $index = $this->indexPrefix.'adapter_real_test';
         $aliasName = $this->indexPrefix.'adapter_real_alias';
 
         try {
-            $index->create('adapter_real_test', function (Mapping $mapping, Settings $settings): void {
+            $indices->create('adapter_real_test', function (Mapping $mapping, Settings $settings): void {
                 $mapping
                     ->text('title')
                     ->keyword('status');
@@ -69,43 +69,43 @@ class RealOpenSearchMigrationCommandTest extends RealOpenSearchTestCase
                 ]);
             });
 
-            $this->assertTrue($this->client()->indices()->exists(['index' => $indexName]));
+            $this->assertTrue($this->client()->indices()->exists(['index' => $index]));
 
-            $index->putMapping('adapter_real_test', function (Mapping $mapping): void {
+            $indices->putMapping('adapter_real_test', function (Mapping $mapping): void {
                 $mapping->keyword('category');
             });
 
-            $mapping = $this->client()->indices()->getMapping(['index' => $indexName]);
+            $mapping = $this->client()->indices()->getMapping(['index' => $index]);
 
             $this->assertSame(
                 'keyword',
-                $mapping[$indexName]['mappings']['properties']['category']['type'] ?? null
+                $mapping[$index]['mappings']['properties']['category']['type'] ?? null
             );
 
-            $index->putAlias('adapter_real_test', 'adapter_real_alias', [
+            $indices->putAlias('adapter_real_test', 'adapter_real_alias', [
                 'term' => [
                     'status' => 'published',
                 ],
             ]);
 
-            $aliases = $this->client()->indices()->getAlias(['index' => $indexName]);
+            $aliases = $this->client()->indices()->getAlias(['index' => $index]);
 
             $this->assertSame(
                 ['term' => ['status' => 'published']],
-                $aliases[$indexName]['aliases'][$aliasName]['filter'] ?? null
+                $aliases[$index]['aliases'][$aliasName]['filter'] ?? null
             );
 
-            $index->deleteAlias('adapter_real_test', 'adapter_real_alias');
+            $indices->deleteAlias('adapter_real_test', 'adapter_real_alias');
 
-            $aliases = $this->client()->indices()->getAlias(['index' => $indexName]);
+            $aliases = $this->client()->indices()->getAlias(['index' => $index]);
 
-            $this->assertArrayNotHasKey($aliasName, $aliases[$indexName]['aliases']);
+            $this->assertArrayNotHasKey($aliasName, $aliases[$index]['aliases']);
 
-            $index->dropIfExists('adapter_real_test');
+            $indices->dropIfExists('adapter_real_test');
 
-            $this->assertFalse($this->client()->indices()->exists(['index' => $indexName]));
+            $this->assertFalse($this->client()->indices()->exists(['index' => $index]));
         } finally {
-            $this->dropIndexIfExists($indexName);
+            $this->dropIndexIfExists($index);
         }
     }
 }

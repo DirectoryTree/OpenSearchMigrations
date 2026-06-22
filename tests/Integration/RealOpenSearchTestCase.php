@@ -63,10 +63,10 @@ class RealOpenSearchTestCase extends TestbenchTestCase
         return $this->app->make(Client::class);
     }
 
-    protected function dropIndexIfExists(string $indexName): void
+    protected function dropIndexIfExists(string $index): void
     {
-        if ($this->client()->indices()->exists(['index' => $indexName])) {
-            $this->client()->indices()->delete(['index' => $indexName]);
+        if ($this->client()->indices()->exists(['index' => $index])) {
+            $this->client()->indices()->delete(['index' => $index]);
         }
     }
 }

@@ -20,14 +20,16 @@ class IndexManagerAdapter implements IndexManagerInterface
     /**
      * Create a new index manager adapter instance.
      */
-    public function __construct(protected IndexManager $indexManager) {}
+    public function __construct(
+        protected IndexManager $indexManager
+    ) {}
 
     /**
      * Create a new index with an optional mapping and settings modifier.
      */
-    public function create(string $indexName, ?callable $modifier = null): IndexManagerInterface
+    public function create(string $index, ?callable $modifier = null): IndexManagerInterface
     {
-        $prefixedIndexName = prefix_index_name($indexName);
+        $prefixedIndex = prefix_index_name($index);
 
         if (isset($modifier)) {
             $mapping = new Mapping;
@@ -35,12 +37,12 @@ class IndexManagerAdapter implements IndexManagerInterface
 
             $modifier($mapping, $settings);
 
-            $index = new IndexBlueprint($prefixedIndexName, $mapping, $settings);
+            $blueprint = new IndexBlueprint($prefixedIndex, $mapping, $settings);
         } else {
-            $index = new IndexBlueprint($prefixedIndexName);
+            $blueprint = new IndexBlueprint($prefixedIndex);
         }
 
-        $this->indexManager->create($index);
+        $this->indexManager->create($blueprint);
 
         return $this;
     }
@@ -48,12 +50,12 @@ class IndexManagerAdapter implements IndexManagerInterface
     /**
      * Create a new index when it does not already exist.
      */
-    public function createIfNotExists(string $indexName, ?callable $modifier = null): IndexManagerInterface
+    public function createIfNotExists(string $index, ?callable $modifier = null): IndexManagerInterface
     {
-        $prefixedIndexName = prefix_index_name($indexName);
+        $prefixedIndex = prefix_index_name($index);
 
-        if (! $this->indexManager->exists($prefixedIndexName)) {
-            $this->create($indexName, $modifier);
+        if (! $this->indexManager->exists($prefixedIndex)) {
+            $this->create($index, $modifier);
         }
 
         return $this;
@@ -62,14 +64,14 @@ class IndexManagerAdapter implements IndexManagerInterface
     /**
      * Update an index mapping with a mapping modifier.
      */
-    public function putMapping(string $indexName, callable $modifier): IndexManagerInterface
+    public function putMapping(string $index, callable $modifier): IndexManagerInterface
     {
-        $prefixedIndexName = prefix_index_name($indexName);
+        $prefixedIndex = prefix_index_name($index);
 
         $mapping = new Mapping;
         $modifier($mapping);
 
-        $this->indexManager->putMapping($prefixedIndexName, $mapping);
+        $this->indexManager->putMapping($prefixedIndex, $mapping);
 
         return $this;
     }
@@ -77,14 +79,14 @@ class IndexManagerAdapter implements IndexManagerInterface
     /**
      * Update index settings with a settings modifier.
      */
-    public function putSettings(string $indexName, callable $modifier): IndexManagerInterface
+    public function putSettings(string $index, callable $modifier): IndexManagerInterface
     {
-        $prefixedIndexName = prefix_index_name($indexName);
+        $prefixedIndex = prefix_index_name($index);
 
         $settings = new Settings;
         $modifier($settings);
 
-        $this->indexManager->putSettings($prefixedIndexName, $settings);
+        $this->indexManager->putSettings($prefixedIndex, $settings);
 
         return $this;
     }
@@ -92,13 +94,13 @@ class IndexManagerAdapter implements IndexManagerInterface
     /**
      * Close the index, update its settings, and re-open it.
      */
-    public function pushSettings(string $indexName, callable $modifier): IndexManagerInterface
+    public function pushSettings(string $index, callable $modifier): IndexManagerInterface
     {
-        $prefixedIndexName = prefix_index_name($indexName);
+        $prefixedIndex = prefix_index_name($index);
 
-        $this->indexManager->close($prefixedIndexName);
-        $this->putSettings($indexName, $modifier);
-        $this->indexManager->open($prefixedIndexName);
+        $this->indexManager->close($prefixedIndex);
+        $this->putSettings($index, $modifier);
+        $this->indexManager->open($prefixedIndex);
 
         return $this;
     }
@@ -106,11 +108,11 @@ class IndexManagerAdapter implements IndexManagerInterface
     /**
      * Delete an index.
      */
-    public function drop(string $indexName): IndexManagerInterface
+    public function drop(string $index): IndexManagerInterface
     {
-        $prefixedIndexName = prefix_index_name($indexName);
+        $prefixedIndex = prefix_index_name($index);
 
-        $this->indexManager->delete($prefixedIndexName);
+        $this->indexManager->delete($prefixedIndex);
 
         return $this;
     }
@@ -118,12 +120,12 @@ class IndexManagerAdapter implements IndexManagerInterface
     /**
      * Delete an index when it exists.
      */
-    public function dropIfExists(string $indexName): IndexManagerInterface
+    public function dropIfExists(string $index): IndexManagerInterface
     {
-        $prefixedIndexName = prefix_index_name($indexName);
+        $prefixedIndex = prefix_index_name($index);
 
-        if ($this->indexManager->exists($prefixedIndexName)) {
-            $this->drop($indexName);
+        if ($this->indexManager->exists($prefixedIndex)) {
+            $this->drop($index);
         }
 
         return $this;
@@ -134,12 +136,12 @@ class IndexManagerAdapter implements IndexManagerInterface
      *
      * @param  array<string, mixed>|null  $filter
      */
-    public function putAlias(string $indexName, string $aliasName, ?array $filter = null): IndexManagerInterface
+    public function putAlias(string $index, string $aliasName, ?array $filter = null): IndexManagerInterface
     {
-        $prefixedIndexName = prefix_index_name($indexName);
+        $prefixedIndex = prefix_index_name($index);
         $prefixedAliasName = prefix_alias_name($aliasName);
 
-        $this->indexManager->putAlias($prefixedIndexName, new Alias($prefixedAliasName, $filter));
+        $this->indexManager->putAlias($prefixedIndex, new Alias($prefixedAliasName, $filter));
 
         return $this;
     }
@@ -147,12 +149,12 @@ class IndexManagerAdapter implements IndexManagerInterface
     /**
      * Delete an index alias.
      */
-    public function deleteAlias(string $indexName, string $aliasName): IndexManagerInterface
+    public function deleteAlias(string $index, string $aliasName): IndexManagerInterface
     {
-        $prefixedIndexName = prefix_index_name($indexName);
+        $prefixedIndex = prefix_index_name($index);
         $prefixedAliasName = prefix_alias_name($aliasName);
 
-        $this->indexManager->deleteAlias($prefixedIndexName, $prefixedAliasName);
+        $this->indexManager->deleteAlias($prefixedIndex, $prefixedAliasName);
 
         return $this;
     }

@@ -5,9 +5,9 @@ namespace DirectoryTree\OpenSearchMigrations;
 /**
  * Prefix an OpenSearch index name.
  */
-function prefix_index_name(string $indexName): string
+function prefix_index_name(string $index): string
 {
-    return config('opensearch-migrations.index_name_prefix').$indexName;
+    return config('opensearch-migrations.index_name_prefix').$index;
 }
 
 /**
