@@ -10,7 +10,9 @@ class MigrationFile
     /**
      * Create a new migration file instance.
      */
-    public function __construct(protected string $filePath) {}
+    public function __construct(
+        protected string $filePath
+    ) {}
 
     /**
      * Get the migration file name without its extension.

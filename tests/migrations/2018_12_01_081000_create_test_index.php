@@ -11,7 +11,9 @@ class CreateTestIndex implements MigrationInterface
     /**
      * Create a new test index migration instance.
      */
-    public function __construct(protected Client $client) {}
+    public function __construct(
+        protected Client $client
+    ) {}
 
     public function up(): void
     {
