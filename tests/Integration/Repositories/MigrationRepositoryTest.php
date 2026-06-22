@@ -60,6 +60,28 @@ class MigrationRepositoryTest extends TestCase
         $this->assertSame(3, DB::table($this->table)->max('id'));
     }
 
+    public function test_repository_table_migration_uses_configured_database_connection(): void
+    {
+        $this->app['config']->set('database.connections.opensearch_migrations', [
+            'driver' => 'sqlite',
+            'database' => ':memory:',
+        ]);
+
+        $this->app['config']->set('opensearch-migrations.connection', 'opensearch_migrations');
+        $this->app['config']->set('opensearch-migrations.table', 'custom_opensearch_migrations');
+
+        $migration = require dirname(__DIR__, 3).'/database/migrations/2019_15_12_112000_create_opensearch_migrations_table.php';
+
+        $migration->up();
+
+        $this->assertFalse(Schema::hasTable('custom_opensearch_migrations'));
+        $this->assertTrue(Schema::connection('opensearch_migrations')->hasTable('custom_opensearch_migrations'));
+
+        $migration->down();
+
+        $this->assertFalse(Schema::connection('opensearch_migrations')->hasTable('custom_opensearch_migrations'));
+    }
+
     public function test_record_passes_existence_check(): void
     {
         $this->assertTrue($this->migrationRepository->exists('2018_12_01_081000_create_test_index'));

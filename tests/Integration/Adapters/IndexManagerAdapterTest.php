@@ -207,6 +207,7 @@ class IndexManagerAdapterTest extends TestCase
     #[DataProvider('prefixProvider')]
     public function test_alias_can_be_created(string $aliasNamePrefix): void
     {
+        $this->app['config']->set('opensearch-migrations.index_name_prefix', $aliasNamePrefix);
         $this->app['config']->set('opensearch-migrations.alias_name_prefix', $aliasNamePrefix);
 
         $index = 'foo';
@@ -215,7 +216,7 @@ class IndexManagerAdapterTest extends TestCase
         $this->indexManagerMock
             ->expects($this->once())
             ->method('putAlias')
-            ->with($index, new Alias($aliasNamePrefix.$aliasName));
+            ->with($aliasNamePrefix.$index, new Alias($aliasNamePrefix.$aliasName));
 
         $this->indexManagerAdapter->putAlias($index, $aliasName);
     }
@@ -223,6 +224,7 @@ class IndexManagerAdapterTest extends TestCase
     #[DataProvider('prefixProvider')]
     public function test_alias_can_be_deleted(string $aliasNamePrefix): void
     {
+        $this->app['config']->set('opensearch-migrations.index_name_prefix', $aliasNamePrefix);
         $this->app['config']->set('opensearch-migrations.alias_name_prefix', $aliasNamePrefix);
 
         $index = 'foo';
@@ -231,7 +233,7 @@ class IndexManagerAdapterTest extends TestCase
         $this->indexManagerMock
             ->expects($this->once())
             ->method('deleteAlias')
-            ->with($index, $aliasNamePrefix.$aliasName);
+            ->with($aliasNamePrefix.$index, $aliasNamePrefix.$aliasName);
 
         $this->indexManagerAdapter->deleteAlias($index, $aliasName);
     }

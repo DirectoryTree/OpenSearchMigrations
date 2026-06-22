@@ -5,7 +5,7 @@ namespace DirectoryTree\OpenSearchMigrations\Tests\Integration\Support;
 use DirectoryTree\OpenSearchMigrations\Support\MigrationPrefix;
 use DirectoryTree\OpenSearchMigrations\Tests\Integration\TestCase;
 
-class PrefixTest extends TestCase
+class MigrationPrefixTest extends TestCase
 {
     public function test_index_names_can_be_prefixed(): void
     {

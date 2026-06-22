@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create(config('opensearch-migrations.table'), function (Blueprint $table) {
+        Schema::connection(config('opensearch-migrations.connection'))->create(config('opensearch-migrations.table'), function (Blueprint $table) {
             $table->increments('id');
             $table->string('migration');
             $table->integer('batch');
@@ -23,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists(config('opensearch-migrations.table'));
+        Schema::connection(config('opensearch-migrations.connection'))->dropIfExists(config('opensearch-migrations.table'));
     }
 };
