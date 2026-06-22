@@ -26,7 +26,7 @@ class MigrationRepositoryTest extends TestCase
     {
         parent::setUp();
 
-        $this->table = config('opensearch.migrations.table');
+        $this->table = config('opensearch-migrations.table');
 
         // create fixtures
         DB::table($this->table)->insert([

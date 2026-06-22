@@ -30,7 +30,7 @@ php artisan migrate
 
 ## Configuration
 
-The migration configuration is published to `config/opensearch.migrations.php`:
+The migration configuration is published to `config/opensearch-migrations.php`:
 
 ```php
 'table' => env('OPENSEARCH_MIGRATIONS_TABLE', 'opensearch_migrations'),

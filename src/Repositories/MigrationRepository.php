@@ -29,8 +29,8 @@ class MigrationRepository implements ReadinessInterface
      */
     public function __construct()
     {
-        $this->table = config('opensearch.migrations.table');
-        $this->connection = config('opensearch.migrations.connection');
+        $this->table = config('opensearch-migrations.table');
+        $this->connection = config('opensearch-migrations.connection');
     }
 
     /**

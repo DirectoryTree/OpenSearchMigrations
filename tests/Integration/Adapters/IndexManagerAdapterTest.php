@@ -35,7 +35,7 @@ class IndexManagerAdapterTest extends TestCase
     #[DataProvider('prefixProvider')]
     public function test_index_can_be_created_without_modifier(string $indexNamePrefix): void
     {
-        $this->app['config']->set('opensearch.migrations.index_name_prefix', $indexNamePrefix);
+        $this->app['config']->set('opensearch-migrations.index_name_prefix', $indexNamePrefix);
 
         $indexName = 'test';
 
@@ -50,7 +50,7 @@ class IndexManagerAdapterTest extends TestCase
     #[DataProvider('prefixProvider')]
     public function test_index_can_be_created_with_modifier(string $indexNamePrefix): void
     {
-        $this->app['config']->set('opensearch.migrations.index_name_prefix', $indexNamePrefix);
+        $this->app['config']->set('opensearch-migrations.index_name_prefix', $indexNamePrefix);
 
         $indexName = 'test';
 
@@ -74,7 +74,7 @@ class IndexManagerAdapterTest extends TestCase
     #[DataProvider('prefixProvider')]
     public function test_index_can_be_created_with_raw_mapping(string $indexNamePrefix): void
     {
-        $this->app['config']->set('opensearch.migrations.index_name_prefix', $indexNamePrefix);
+        $this->app['config']->set('opensearch-migrations.index_name_prefix', $indexNamePrefix);
 
         $indexName = 'test';
 
@@ -97,7 +97,7 @@ class IndexManagerAdapterTest extends TestCase
     #[DataProvider('prefixProvider')]
     public function test_index_with_modifier_can_be_created_only_if_it_does_not_exist(string $indexNamePrefix): void
     {
-        $this->app['config']->set('opensearch.migrations.index_name_prefix', $indexNamePrefix);
+        $this->app['config']->set('opensearch-migrations.index_name_prefix', $indexNamePrefix);
 
         $indexName = 'test';
 
@@ -118,7 +118,7 @@ class IndexManagerAdapterTest extends TestCase
     #[DataProvider('prefixProvider')]
     public function test_index_with_raw_mapping_can_be_created_only_if_it_does_not_exist(string $indexNamePrefix): void
     {
-        $this->app['config']->set('opensearch.migrations.index_name_prefix', $indexNamePrefix);
+        $this->app['config']->set('opensearch-migrations.index_name_prefix', $indexNamePrefix);
 
         $indexName = 'test';
 
@@ -147,7 +147,7 @@ class IndexManagerAdapterTest extends TestCase
     #[DataProvider('prefixProvider')]
     public function test_mapping_can_be_updated_using_modifier(string $indexNamePrefix): void
     {
-        $this->app['config']->set('opensearch.migrations.index_name_prefix', $indexNamePrefix);
+        $this->app['config']->set('opensearch-migrations.index_name_prefix', $indexNamePrefix);
 
         $indexName = 'test';
 
@@ -169,7 +169,7 @@ class IndexManagerAdapterTest extends TestCase
     #[DataProvider('prefixProvider')]
     public function test_mapping_can_be_updated_using_raw_input(string $indexNamePrefix): void
     {
-        $this->app['config']->set('opensearch.migrations.index_name_prefix', $indexNamePrefix);
+        $this->app['config']->set('opensearch-migrations.index_name_prefix', $indexNamePrefix);
 
         $indexName = 'test';
 
@@ -190,7 +190,7 @@ class IndexManagerAdapterTest extends TestCase
     #[DataProvider('prefixProvider')]
     public function test_settings_can_be_updated_using_modifier(string $indexNamePrefix): void
     {
-        $this->app['config']->set('opensearch.migrations.index_name_prefix', $indexNamePrefix);
+        $this->app['config']->set('opensearch-migrations.index_name_prefix', $indexNamePrefix);
 
         $indexName = 'test';
 
@@ -212,7 +212,7 @@ class IndexManagerAdapterTest extends TestCase
     #[DataProvider('prefixProvider')]
     public function test_settings_can_be_updated_using_raw_input(string $indexNamePrefix): void
     {
-        $this->app['config']->set('opensearch.migrations.index_name_prefix', $indexNamePrefix);
+        $this->app['config']->set('opensearch-migrations.index_name_prefix', $indexNamePrefix);
 
         $indexName = 'test';
         $settings = ['number_of_replicas' => 2];
@@ -228,7 +228,7 @@ class IndexManagerAdapterTest extends TestCase
     #[DataProvider('prefixProvider')]
     public function test_settings_can_be_pushed_using_modifier(string $indexNamePrefix): void
     {
-        $this->app['config']->set('opensearch.migrations.index_name_prefix', $indexNamePrefix);
+        $this->app['config']->set('opensearch-migrations.index_name_prefix', $indexNamePrefix);
 
         $indexName = 'test';
 
@@ -260,7 +260,7 @@ class IndexManagerAdapterTest extends TestCase
     #[DataProvider('prefixProvider')]
     public function test_settings_can_be_pushed_using_raw_input(string $indexNamePrefix): void
     {
-        $this->app['config']->set('opensearch.migrations.index_name_prefix', $indexNamePrefix);
+        $this->app['config']->set('opensearch-migrations.index_name_prefix', $indexNamePrefix);
 
         $indexName = 'test';
         $settings = ['number_of_replicas' => 2];
@@ -286,7 +286,7 @@ class IndexManagerAdapterTest extends TestCase
     #[DataProvider('prefixProvider')]
     public function test_index_can_be_dropped(string $indexNamePrefix): void
     {
-        $this->app['config']->set('opensearch.migrations.index_name_prefix', $indexNamePrefix);
+        $this->app['config']->set('opensearch-migrations.index_name_prefix', $indexNamePrefix);
 
         $indexName = 'test';
 
@@ -301,7 +301,7 @@ class IndexManagerAdapterTest extends TestCase
     #[DataProvider('prefixProvider')]
     public function test_index_can_be_dropped_only_if_exists(string $indexNamePrefix): void
     {
-        $this->app['config']->set('opensearch.migrations.index_name_prefix', $indexNamePrefix);
+        $this->app['config']->set('opensearch-migrations.index_name_prefix', $indexNamePrefix);
 
         $indexName = 'test';
 
@@ -322,7 +322,7 @@ class IndexManagerAdapterTest extends TestCase
     #[DataProvider('prefixProvider')]
     public function test_alias_can_be_created(string $aliasNamePrefix): void
     {
-        $this->app['config']->set('opensearch.migrations.alias_name_prefix', $aliasNamePrefix);
+        $this->app['config']->set('opensearch-migrations.alias_name_prefix', $aliasNamePrefix);
 
         $indexName = 'foo';
         $aliasName = 'bar';
@@ -338,7 +338,7 @@ class IndexManagerAdapterTest extends TestCase
     #[DataProvider('prefixProvider')]
     public function test_alias_can_be_deleted(string $aliasNamePrefix): void
     {
-        $this->app['config']->set('opensearch.migrations.alias_name_prefix', $aliasNamePrefix);
+        $this->app['config']->set('opensearch-migrations.alias_name_prefix', $aliasNamePrefix);
 
         $indexName = 'foo';
         $aliasName = 'bar';

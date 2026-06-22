@@ -39,7 +39,7 @@ class OpenSearchMigrationsServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__.'/../config/opensearch.migrations.php', 'opensearch.migrations');
+        $this->mergeConfigFrom(__DIR__.'/../config/opensearch-migrations.php', 'opensearch-migrations');
 
         $this->app->bindIf(IndexManagerInterface::class, IndexManagerAdapter::class);
 
@@ -54,7 +54,7 @@ class OpenSearchMigrationsServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->publishes([
-            __DIR__.'/../config/opensearch.migrations.php' => config_path('opensearch.migrations.php'),
+            __DIR__.'/../config/opensearch-migrations.php' => config_path('opensearch-migrations.php'),
         ]);
 
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');

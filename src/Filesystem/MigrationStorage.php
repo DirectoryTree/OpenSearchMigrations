@@ -21,7 +21,7 @@ class MigrationStorage implements ReadinessInterface
      */
     public function __construct(protected Filesystem $filesystem)
     {
-        $this->directory = rtrim(config('opensearch.migrations.storage_directory', ''), '/');
+        $this->directory = rtrim(config('opensearch-migrations.storage_directory', ''), '/');
     }
 
     /**

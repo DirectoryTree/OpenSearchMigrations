@@ -33,7 +33,7 @@ class MigratorTest extends TestCase
     {
         parent::setUp();
 
-        $this->table = config('opensearch.migrations.table');
+        $this->table = config('opensearch-migrations.table');
         $this->output = $this->createMock(OutputStyle::class);
         $this->migrator = resolve(Migrator::class)->setOutput($this->output);
 
@@ -98,10 +98,10 @@ class MigratorTest extends TestCase
     public function test_all_migrations_can_not_be_executed_if_directory_is_empty(): void
     {
         // create a temporary empty directory and reconfigure the package to use it
-        $tmpDirectory = config('opensearch.migrations.storage_directory').'/tmp';
+        $tmpDirectory = config('opensearch-migrations.storage_directory').'/tmp';
 
         @mkdir($tmpDirectory);
-        $this->app['config']->set('opensearch.migrations.storage_directory', $tmpDirectory);
+        $this->app['config']->set('opensearch-migrations.storage_directory', $tmpDirectory);
 
         // check that there is nothing to migrate
         $this->output
@@ -317,7 +317,7 @@ class MigratorTest extends TestCase
 
     public function test_migrator_is_not_ready_when_storage_is_not_ready(): void
     {
-        $this->app['config']->set('opensearch.migrations.storage_directory', '/non_existing_directory');
+        $this->app['config']->set('opensearch-migrations.storage_directory', '/non_existing_directory');
 
         $this->output
             ->expects($this->once())
