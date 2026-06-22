@@ -46,21 +46,6 @@ class IndexManagerAdapter implements IndexManagerInterface
     }
 
     /**
-     * Create a new index with raw mapping and settings arrays.
-     *
-     * @param  array<string, mixed>|null  $mapping
-     * @param  array<string, mixed>|null  $settings
-     */
-    public function createRaw(string $indexName, ?array $mapping = null, ?array $settings = null): IndexManagerInterface
-    {
-        $prefixedIndexName = prefix_index_name($indexName);
-
-        $this->indexManager->createRaw($prefixedIndexName, $mapping, $settings);
-
-        return $this;
-    }
-
-    /**
      * Create a new index when it does not already exist.
      */
     public function createIfNotExists(string $indexName, ?callable $modifier = null): IndexManagerInterface
@@ -69,26 +54,6 @@ class IndexManagerAdapter implements IndexManagerInterface
 
         if (! $this->indexManager->exists($prefixedIndexName)) {
             $this->create($indexName, $modifier);
-        }
-
-        return $this;
-    }
-
-    /**
-     * Create a new index from raw mapping and settings arrays when it does not already exist.
-     *
-     * @param  array<string, mixed>|null  $mapping
-     * @param  array<string, mixed>|null  $settings
-     */
-    public function createIfNotExistsRaw(
-        string $indexName,
-        ?array $mapping = null,
-        ?array $settings = null
-    ): IndexManagerInterface {
-        $prefixedIndexName = prefix_index_name($indexName);
-
-        if (! $this->indexManager->exists($prefixedIndexName)) {
-            $this->createRaw($indexName, $mapping, $settings);
         }
 
         return $this;
@@ -110,20 +75,6 @@ class IndexManagerAdapter implements IndexManagerInterface
     }
 
     /**
-     * Update an index mapping from a raw mapping array.
-     *
-     * @param  array<string, mixed>  $mapping
-     */
-    public function putMappingRaw(string $indexName, array $mapping): IndexManagerInterface
-    {
-        $prefixedIndexName = prefix_index_name($indexName);
-
-        $this->indexManager->putMappingRaw($prefixedIndexName, $mapping);
-
-        return $this;
-    }
-
-    /**
      * Update index settings with a settings modifier.
      */
     public function putSettings(string $indexName, callable $modifier): IndexManagerInterface
@@ -134,20 +85,6 @@ class IndexManagerAdapter implements IndexManagerInterface
         $modifier($settings);
 
         $this->indexManager->putSettings($prefixedIndexName, $settings);
-
-        return $this;
-    }
-
-    /**
-     * Update index settings from a raw settings array.
-     *
-     * @param  array<string, mixed>  $settings
-     */
-    public function putSettingsRaw(string $indexName, array $settings): IndexManagerInterface
-    {
-        $prefixedIndexName = prefix_index_name($indexName);
-
-        $this->indexManager->putSettingsRaw($prefixedIndexName, $settings);
 
         return $this;
     }
@@ -167,29 +104,13 @@ class IndexManagerAdapter implements IndexManagerInterface
     }
 
     /**
-     * Close the index, update its settings from a raw array, and re-open it.
-     *
-     * @param  array<string, mixed>  $settings
-     */
-    public function pushSettingsRaw(string $indexName, array $settings): IndexManagerInterface
-    {
-        $prefixedIndexName = prefix_index_name($indexName);
-
-        $this->indexManager->close($prefixedIndexName);
-        $this->putSettingsRaw($indexName, $settings);
-        $this->indexManager->open($prefixedIndexName);
-
-        return $this;
-    }
-
-    /**
      * Delete an index.
      */
     public function drop(string $indexName): IndexManagerInterface
     {
         $prefixedIndexName = prefix_index_name($indexName);
 
-        $this->indexManager->drop($prefixedIndexName);
+        $this->indexManager->delete($prefixedIndexName);
 
         return $this;
     }

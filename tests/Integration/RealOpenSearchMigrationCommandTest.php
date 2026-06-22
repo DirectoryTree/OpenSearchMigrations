@@ -71,13 +71,9 @@ class RealOpenSearchMigrationCommandTest extends RealOpenSearchTestCase
 
             $this->assertTrue($this->client()->indices()->exists(['index' => $indexName]));
 
-            $index->putMappingRaw('adapter_real_test', [
-                'properties' => [
-                    'category' => [
-                        'type' => 'keyword',
-                    ],
-                ],
-            ]);
+            $index->putMapping('adapter_real_test', static function (Mapping $mapping): void {
+                $mapping->keyword('category');
+            });
 
             $mapping = $this->client()->indices()->getMapping(['index' => $indexName]);
 
