@@ -12,18 +12,13 @@ use Illuminate\Support\Collection;
 class MigrationStorage implements ReadinessInterface
 {
     /**
-     * @var string
-     */
-    protected $directory;
-
-    /**
      * Create a new migration storage instance.
      */
     public function __construct(
         protected Filesystem $filesystem,
-        ?string $directory = null
+        protected string $directory
     ) {
-        $this->directory = rtrim($directory ?? '', '/');
+        $this->directory = rtrim($directory, '/');
     }
 
     /**
