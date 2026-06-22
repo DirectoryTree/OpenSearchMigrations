@@ -12,7 +12,7 @@ class RealOpenSearchTestCase extends TestbenchTestCase
 {
     protected string $indexPrefix;
 
-    protected function getPackageProviders($app)
+    protected function getPackageProviders($app): array
     {
         return [
             OpenSearchClientServiceProvider::class,
@@ -20,7 +20,7 @@ class RealOpenSearchTestCase extends TestbenchTestCase
         ];
     }
 
-    protected function getEnvironmentSetUp($app)
+    protected function getEnvironmentSetUp($app): void
     {
         parent::getEnvironmentSetUp($app);
 
