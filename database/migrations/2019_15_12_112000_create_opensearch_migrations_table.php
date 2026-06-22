@@ -12,6 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create(config('opensearch-migrations.table'), function (Blueprint $table) {
+            $table->increments('id');
             $table->string('migration');
             $table->integer('batch');
         });

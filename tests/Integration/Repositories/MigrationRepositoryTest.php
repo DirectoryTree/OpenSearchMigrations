@@ -47,6 +47,19 @@ class MigrationRepositoryTest extends TestCase
         );
     }
 
+    public function test_repository_table_matches_laravel_migration_table_structure(): void
+    {
+        $this->assertTrue(Schema::hasColumns($this->table, [
+            'id',
+            'migration',
+            'batch',
+        ]));
+
+        $this->migrationRepository->insert('2019_12_12_201657_update_test_index_settings', 3);
+
+        $this->assertSame(3, DB::table($this->table)->max('id'));
+    }
+
     public function test_record_passes_existence_check(): void
     {
         $this->assertTrue($this->migrationRepository->exists('2018_12_01_081000_create_test_index'));
