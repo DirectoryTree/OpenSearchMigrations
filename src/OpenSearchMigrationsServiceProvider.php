@@ -14,6 +14,7 @@ use DirectoryTree\OpenSearchMigrations\Console\RollbackCommand;
 use DirectoryTree\OpenSearchMigrations\Console\StatusCommand;
 use DirectoryTree\OpenSearchMigrations\Filesystem\MigrationStorage;
 use DirectoryTree\OpenSearchMigrations\Repositories\MigrationRepository;
+use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\ServiceProvider;
 
@@ -29,12 +30,12 @@ class OpenSearchMigrationsServiceProvider extends ServiceProvider
      */
     protected array $commands = [
         MakeCommand::class,
+        ResetCommand::class,
+        FreshCommand::class,
+        StatusCommand::class,
         MigrateCommand::class,
         RefreshCommand::class,
-        ResetCommand::class,
         RollbackCommand::class,
-        StatusCommand::class,
-        FreshCommand::class,
     ];
 
     /**
@@ -44,23 +45,23 @@ class OpenSearchMigrationsServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(__DIR__.'/../config/opensearch-migrations.php', 'opensearch-migrations');
 
-        $this->app->bindIf(IndexManagerInterface::class, IndexManagerAdapter::class);
+        $this->app->bind(IndexManagerInterface::class, IndexManagerAdapter::class);
 
-        $this->app->bindIf(MigrationRepository::class, function () {
+        $this->app->bind(MigrationRepository::class, function (Application $app) {
             return new MigrationRepository(
-                config('opensearch-migrations.table'),
-                config('opensearch-migrations.connection')
+                $app['config']->get('opensearch-migrations.table'),
+                $app['config']->get('opensearch-migrations.connection')
             );
         });
 
-        $this->app->bindIf(MigrationStorage::class, function ($app) {
+        $this->app->bind(MigrationStorage::class, function (Application $app) {
             return new MigrationStorage(
                 $app->make(Filesystem::class),
-                config('opensearch-migrations.storage_directory')
+                $app['config']->get('opensearch-migrations.storage_directory')
             );
         });
 
-        $this->app->singletonIf(IndexManager::class, function ($app) {
+        $this->app->singleton(IndexManager::class, function (Application $app) {
             return new IndexManager($app->make(OpenSearchManager::class)->default());
         });
     }
