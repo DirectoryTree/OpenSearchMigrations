@@ -28,12 +28,7 @@ class Index extends Facade
      */
     public static function fake(array $existing = []): FakeIndexManager
     {
-        static::clearResolvedInstance(IndexManagerInterface::class);
-
-        static::$app->instance(
-            IndexManagerInterface::class,
-            $fake = new FakeIndexManager($existing),
-        );
+        static::swap($fake = new FakeIndexManager($existing));
 
         return $fake;
     }
