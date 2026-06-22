@@ -2,7 +2,7 @@
 
 use DirectoryTree\OpenSearchMigrations\Facades\Index;
 use DirectoryTree\OpenSearchMigrations\MigrationInterface;
-use DirectoryTree\OpenSearchMigrations\Support\Prefix;
+use DirectoryTree\OpenSearchMigrations\Support\MigrationPrefix;
 use OpenSearch\Client;
 
 class CreateTestIndex implements MigrationInterface
@@ -19,7 +19,7 @@ class CreateTestIndex implements MigrationInterface
         Index::create('test');
 
         $this->client->indices()->clearCache([
-            'index' => Prefix::index('test'),
+            'index' => MigrationPrefix::index('test'),
         ]);
     }
 

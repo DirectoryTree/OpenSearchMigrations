@@ -5,7 +5,7 @@ namespace DirectoryTree\OpenSearchMigrations\Support;
 /**
  * Applies configured OpenSearch migration prefixes.
  */
-class Prefix
+class MigrationPrefix
 {
     /**
      * Prefix an OpenSearch index name.

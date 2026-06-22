@@ -8,7 +8,7 @@ use DirectoryTree\OpenSearchAdapter\Indices\IndexManager;
 use DirectoryTree\OpenSearchAdapter\Indices\Mapping;
 use DirectoryTree\OpenSearchAdapter\Indices\Settings;
 use DirectoryTree\OpenSearchMigrations\IndexManagerInterface;
-use DirectoryTree\OpenSearchMigrations\Support\Prefix;
+use DirectoryTree\OpenSearchMigrations\Support\MigrationPrefix;
 
 /**
  * Adapts the OpenSearch index manager for migration-friendly operations.
@@ -25,15 +25,15 @@ class IndexManagerAdapter implements IndexManagerInterface
     /**
      * Create a new index with an optional mapping and settings modifier.
      */
-    public function create(string $index, ?callable $modifier = null): IndexManagerInterface
+    public function create(string $index, ?callable $modifier = null): static
     {
-        $prefixedIndex = Prefix::index($index);
+        $prefixedIndex = MigrationPrefix::index($index);
 
         if (isset($modifier)) {
-            $mapping = new Mapping;
-            $settings = new Settings;
-
-            $modifier($mapping, $settings);
+            $modifier(
+                $mapping = new Mapping,
+                $settings = new Settings,
+            );
 
             $blueprint = new IndexBlueprint($prefixedIndex, $mapping, $settings);
         } else {
@@ -48,9 +48,9 @@ class IndexManagerAdapter implements IndexManagerInterface
     /**
      * Create a new index when it does not already exist.
      */
-    public function createIfNotExists(string $index, ?callable $modifier = null): IndexManagerInterface
+    public function createIfNotExists(string $index, ?callable $modifier = null): static
     {
-        $prefixedIndex = Prefix::index($index);
+        $prefixedIndex = MigrationPrefix::index($index);
 
         if (! $this->indexManager->exists($prefixedIndex)) {
             $this->create($index, $modifier);
@@ -62,12 +62,11 @@ class IndexManagerAdapter implements IndexManagerInterface
     /**
      * Update an index mapping with a mapping modifier.
      */
-    public function putMapping(string $index, callable $modifier): IndexManagerInterface
+    public function putMapping(string $index, callable $modifier): static
     {
-        $prefixedIndex = Prefix::index($index);
+        $prefixedIndex = MigrationPrefix::index($index);
 
-        $mapping = new Mapping;
-        $modifier($mapping);
+        $modifier($mapping = new Mapping);
 
         $this->indexManager->putMapping($prefixedIndex, $mapping);
 
@@ -77,12 +76,11 @@ class IndexManagerAdapter implements IndexManagerInterface
     /**
      * Update index settings with a settings modifier.
      */
-    public function putSettings(string $index, callable $modifier): IndexManagerInterface
+    public function putSettings(string $index, callable $modifier): static
     {
-        $prefixedIndex = Prefix::index($index);
+        $prefixedIndex = MigrationPrefix::index($index);
 
-        $settings = new Settings;
-        $modifier($settings);
+        $modifier($settings = new Settings);
 
         $this->indexManager->putSettings($prefixedIndex, $settings);
 
@@ -92,9 +90,9 @@ class IndexManagerAdapter implements IndexManagerInterface
     /**
      * Close the index, update its settings, and re-open it.
      */
-    public function pushSettings(string $index, callable $modifier): IndexManagerInterface
+    public function pushSettings(string $index, callable $modifier): static
     {
-        $prefixedIndex = Prefix::index($index);
+        $prefixedIndex = MigrationPrefix::index($index);
 
         $this->indexManager->close($prefixedIndex);
         $this->putSettings($index, $modifier);
@@ -106,9 +104,9 @@ class IndexManagerAdapter implements IndexManagerInterface
     /**
      * Delete an index.
      */
-    public function drop(string $index): IndexManagerInterface
+    public function drop(string $index): static
     {
-        $prefixedIndex = Prefix::index($index);
+        $prefixedIndex = MigrationPrefix::index($index);
 
         $this->indexManager->delete($prefixedIndex);
 
@@ -118,9 +116,9 @@ class IndexManagerAdapter implements IndexManagerInterface
     /**
      * Delete an index when it exists.
      */
-    public function dropIfExists(string $index): IndexManagerInterface
+    public function dropIfExists(string $index): static
     {
-        $prefixedIndex = Prefix::index($index);
+        $prefixedIndex = MigrationPrefix::index($index);
 
         if ($this->indexManager->exists($prefixedIndex)) {
             $this->drop($index);
@@ -134,12 +132,12 @@ class IndexManagerAdapter implements IndexManagerInterface
      *
      * @param  array<string, mixed>|null  $filter
      */
-    public function putAlias(string $index, string $aliasName, ?array $filter = null): IndexManagerInterface
+    public function putAlias(string $index, string $aliasName, ?array $filter = null): static
     {
-        $prefixedIndex = Prefix::index($index);
-        $prefixedAliasName = Prefix::alias($aliasName);
-
-        $this->indexManager->putAlias($prefixedIndex, new Alias($prefixedAliasName, $filter));
+        $this->indexManager->putAlias(
+            MigrationPrefix::index($index),
+            new Alias(MigrationPrefix::alias($aliasName), $filter),
+        );
 
         return $this;
     }
@@ -147,12 +145,12 @@ class IndexManagerAdapter implements IndexManagerInterface
     /**
      * Delete an index alias.
      */
-    public function deleteAlias(string $index, string $aliasName): IndexManagerInterface
+    public function deleteAlias(string $index, string $aliasName): static
     {
-        $prefixedIndex = Prefix::index($index);
-        $prefixedAliasName = Prefix::alias($aliasName);
-
-        $this->indexManager->deleteAlias($prefixedIndex, $prefixedAliasName);
+        $this->indexManager->deleteAlias(
+            MigrationPrefix::index($index),
+            MigrationPrefix::alias($aliasName),
+        );
 
         return $this;
     }
