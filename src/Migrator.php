@@ -62,7 +62,7 @@ class Migrator implements ReadinessInterface
         $files = $this->migrationStorage->findAll();
         $migratedFileNames = $this->migrationRepository->getAll();
 
-        $nonMigratedFiles = $files->filter(static function (MigrationFile $file) use ($migratedFileNames) {
+        $nonMigratedFiles = $files->filter(function (MigrationFile $file) use ($migratedFileNames) {
             return ! $migratedFileNames->contains($file->getName());
         });
 
@@ -125,7 +125,7 @@ class Migrator implements ReadinessInterface
 
         $headers = ['Ran?', 'Last batch?', 'Migration'];
 
-        $rows = $files->map(static function (MigrationFile $file) use ($migratedFileNames, $migratedLastBatchFileNames) {
+        $rows = $files->map(function (MigrationFile $file) use ($migratedFileNames, $migratedLastBatchFileNames) {
             return [
                 $migratedFileNames->contains($file->getName()) ? '<info>Yes</info>' : '<comment>No</comment>',
                 $migratedLastBatchFileNames->contains($file->getName()) ? '<info>Yes</info>' : '<comment>No</comment>',
@@ -185,7 +185,7 @@ class Migrator implements ReadinessInterface
         } elseif ($fileNames->count() != $files->count()) {
             $this->output->writeln(
                 '<error>Migration is not found:</error> '.
-                implode(',', $fileNames->diff($files->map(static function (MigrationFile $file) {
+                implode(',', $fileNames->diff($files->map(function (MigrationFile $file) {
                     return $file->getName();
                 }))->toArray())
             );

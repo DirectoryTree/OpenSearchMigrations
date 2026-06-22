@@ -54,7 +54,7 @@ class IndexManagerAdapterTest extends TestCase
 
         $indexName = 'test';
 
-        $modifier = static function (Mapping $mapping, Settings $settings) {
+        $modifier = function (Mapping $mapping, Settings $settings) {
             $mapping->text('title');
             $settings->index(['number_of_replicas' => 2]);
         };
@@ -99,7 +99,7 @@ class IndexManagerAdapterTest extends TestCase
 
         $indexName = 'test';
 
-        $modifier = static function (Mapping $mapping) {
+        $modifier = function (Mapping $mapping) {
             $mapping->disableSource()->text('title');
         };
 
@@ -121,7 +121,7 @@ class IndexManagerAdapterTest extends TestCase
 
         $indexName = 'test';
 
-        $modifier = static function (Settings $settings) {
+        $modifier = function (Settings $settings) {
             $settings->index(['number_of_replicas' => 2, 'refresh_interval' => -1]);
         };
 
@@ -143,7 +143,7 @@ class IndexManagerAdapterTest extends TestCase
 
         $indexName = 'test';
 
-        $modifier = static function (Settings $settings) {
+        $modifier = function (Settings $settings) {
             $settings->index(['number_of_replicas' => 2]);
         };
 

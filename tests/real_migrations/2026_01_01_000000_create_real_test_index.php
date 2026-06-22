@@ -11,7 +11,7 @@ class CreateRealTestIndex implements MigrationInterface
      */
     public function up(): void
     {
-        Index::create('real_test', static function (Mapping $mapping) {
+        Index::create('real_test', function (Mapping $mapping) {
             $mapping->text('title');
         });
     }

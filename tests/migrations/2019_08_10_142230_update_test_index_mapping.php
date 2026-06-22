@@ -8,7 +8,7 @@ class UpdateTestIndexMapping implements MigrationInterface
 {
     public function up(): void
     {
-        Index::putMapping('test', static function (Mapping $mapping) {
+        Index::putMapping('test', function (Mapping $mapping) {
             $mapping->enableSource();
             $mapping->text('title');
         });
@@ -16,7 +16,7 @@ class UpdateTestIndexMapping implements MigrationInterface
 
     public function down(): void
     {
-        Index::putMapping('test', static function (Mapping $mapping) {
+        Index::putMapping('test', function (Mapping $mapping) {
             $mapping->disableSource();
         });
     }

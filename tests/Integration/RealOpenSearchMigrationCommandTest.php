@@ -58,7 +58,7 @@ class RealOpenSearchMigrationCommandTest extends RealOpenSearchTestCase
         $aliasName = $this->indexPrefix.'adapter_real_alias';
 
         try {
-            $index->create('adapter_real_test', static function (Mapping $mapping, Settings $settings): void {
+            $index->create('adapter_real_test', function (Mapping $mapping, Settings $settings): void {
                 $mapping
                     ->text('title')
                     ->keyword('status');
@@ -71,7 +71,7 @@ class RealOpenSearchMigrationCommandTest extends RealOpenSearchTestCase
 
             $this->assertTrue($this->client()->indices()->exists(['index' => $indexName]));
 
-            $index->putMapping('adapter_real_test', static function (Mapping $mapping): void {
+            $index->putMapping('adapter_real_test', function (Mapping $mapping): void {
                 $mapping->keyword('category');
             });
 
