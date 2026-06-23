@@ -4,6 +4,7 @@ namespace DirectoryTree\OpenSearchMigrations\Repositories;
 
 use DirectoryTree\OpenSearchMigrations\ReadinessInterface;
 use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -72,6 +73,18 @@ class MigrationRepository implements ReadinessInterface
     }
 
     /**
+     * Create the migration repository table.
+     */
+    public function create(): void
+    {
+        Schema::connection($this->connection)->create($this->table, function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('migration');
+            $table->integer('batch');
+        });
+    }
+
+    /**
      * Get the latest migration batch number.
      */
     public function getLastBatchNumber(): ?int
@@ -123,6 +136,10 @@ class MigrationRepository implements ReadinessInterface
      */
     public function isReady(): bool
     {
+        if (! Schema::connection($this->connection)->hasTable($this->table)) {
+            $this->create();
+        }
+
         return Schema::connection($this->connection)->hasTable($this->table);
     }
 }

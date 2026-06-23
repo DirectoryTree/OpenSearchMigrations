@@ -78,8 +78,6 @@ class OpenSearchMigrationsServiceProvider extends ServiceProvider
             __DIR__.'/../config/opensearch-migrations.php' => config_path('opensearch-migrations.php'),
         ]);
 
-        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
-
         $this->commands($this->commands);
     }
 }

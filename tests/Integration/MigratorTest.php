@@ -2,6 +2,7 @@
 
 use DirectoryTree\OpenSearchMigrations\Facades\Index;
 use DirectoryTree\OpenSearchMigrations\Migrator;
+use DirectoryTree\OpenSearchMigrations\Repositories\MigrationRepository;
 use Illuminate\Console\OutputStyle;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -12,6 +13,8 @@ uses(RefreshDatabase::class);
 function seededMigrator(OutputStyle $output): array
 {
     $table = config('opensearch-migrations.table');
+
+    app(MigrationRepository::class)->isReady();
 
     DB::table($table)->insert([
         ['migration' => '2018_12_01_081000_create_test_index', 'batch' => 1],
@@ -223,13 +226,14 @@ it('is ready when the repository and storage are ready', function (): void {
     expect($migrator->isReady())->toBeTrue();
 });
 
-it('is not ready when the repository is not ready', function (): void {
-    $output = outputExpectingLines(['<error>Migration table is not yet created</error>']);
+it('creates the repository table when checking readiness', function (): void {
+    $output = Mockery::mock(OutputStyle::class);
     [$table, $migrator] = seededMigrator($output);
 
     Schema::drop($table);
 
-    expect($migrator->isReady())->toBeFalse();
+    expect($migrator->isReady())->toBeTrue();
+    expect(Schema::hasTable($table))->toBeTrue();
 });
 
 it('is not ready when the storage is not ready', function (): void {

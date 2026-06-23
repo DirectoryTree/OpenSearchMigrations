@@ -22,12 +22,6 @@ Publish the migration configuration:
 php artisan vendor:publish --provider="DirectoryTree\OpenSearchMigrations\OpenSearchMigrationsServiceProvider"
 ```
 
-Run Laravel migrations to create the OpenSearch migrations table:
-
-```bash
-php artisan migrate
-```
-
 ## Configuration
 
 The migration configuration is published to `config/opensearch-migrations.php`:

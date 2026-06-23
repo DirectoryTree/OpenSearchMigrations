@@ -10,6 +10,9 @@ uses(RefreshDatabase::class);
 function seedMigrationRepositoryTable(): string
 {
     $table = config('opensearch-migrations.table');
+    $repository = app(MigrationRepository::class);
+
+    $repository->isReady();
 
     DB::table($table)->insert([
         ['migration' => '2019_08_10_142230_update_test_index_mapping', 'batch' => 2],
@@ -18,6 +21,16 @@ function seedMigrationRepositoryTable(): string
 
     return $table;
 }
+
+it('creates the repository table when it is missing', function (): void {
+    $table = config('opensearch-migrations.table');
+
+    expect(Schema::hasTable($table))->toBeFalse();
+
+    expect(app(MigrationRepository::class)->isReady())->toBeTrue();
+
+    expect(Schema::hasTable($table))->toBeTrue();
+});
 
 it('inserts records', function (): void {
     $table = seedMigrationRepositoryTable();
@@ -42,7 +55,7 @@ it('matches Laravel migration table structure', function (): void {
     expect(DB::table($table)->max('id'))->toBe(3);
 });
 
-it('uses the configured database connection for the table migration', function (): void {
+it('uses the configured database connection for the repository table', function (): void {
     seedMigrationRepositoryTable();
 
     config()->set('database.connections.opensearch_migrations', [
@@ -53,16 +66,12 @@ it('uses the configured database connection for the table migration', function (
     config()->set('opensearch-migrations.connection', 'opensearch_migrations');
     config()->set('opensearch-migrations.table', 'custom_opensearch_migrations');
 
-    $migration = require dirname(__DIR__, 3).'/database/migrations/2019_15_12_112000_create_opensearch_migrations_table.php';
+    $repository = app(MigrationRepository::class);
 
-    $migration->up();
+    $repository->isReady();
 
     expect(Schema::hasTable('custom_opensearch_migrations'))->toBeFalse();
     expect(Schema::connection('opensearch_migrations')->hasTable('custom_opensearch_migrations'))->toBeTrue();
-
-    $migration->down();
-
-    expect(Schema::connection('opensearch_migrations')->hasTable('custom_opensearch_migrations'))->toBeFalse();
 });
 
 it('checks whether records exist', function (): void {
@@ -120,12 +129,13 @@ it('is ready when the table exists', function (): void {
     expect(app(MigrationRepository::class)->isReady())->toBeTrue();
 });
 
-it('is not ready when the table does not exist', function (): void {
+it('is ready after creating a missing table', function (): void {
     $table = seedMigrationRepositoryTable();
 
     Schema::drop($table);
 
-    expect(app(MigrationRepository::class)->isReady())->toBeFalse();
+    expect(app(MigrationRepository::class)->isReady())->toBeTrue();
+    expect(Schema::hasTable($table))->toBeTrue();
 });
 
 it('deletes all records', function (): void {
