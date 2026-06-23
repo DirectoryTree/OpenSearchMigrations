@@ -3,7 +3,7 @@
 <p align="center">OpenSearch index migrations for Laravel.</p>
 
 <p align="center">
-<a href="https://github.com/directorytree/opensearch-migrations/actions"><img src="https://img.shields.io/github/actions/workflow/status/directorytree/opensearch-migrations/run-tests.yml?branch=master&style=flat-square"></a>
+<a href="https://github.com/DirectoryTree/OpenSearchMigrations/actions"><img src="https://img.shields.io/github/actions/workflow/status/DirectoryTree/OpenSearchMigrations/run-tests.yml?branch=master&style=flat-square"></a>
 <a href="https://packagist.org/packages/directorytree/opensearch-migrations"><img src="https://img.shields.io/packagist/v/directorytree/opensearch-migrations.svg?style=flat-square"></a>
 <a href="https://packagist.org/packages/directorytree/opensearch-migrations"><img src="https://img.shields.io/packagist/dt/directorytree/opensearch-migrations.svg?style=flat-square"></a>
 <a href="https://packagist.org/packages/directorytree/opensearch-migrations"><img src="https://img.shields.io/packagist/l/directorytree/opensearch-migrations.svg?style=flat-square"></a>
