@@ -136,10 +136,12 @@ class MigrationRepository implements ReadinessInterface
      */
     public function isReady(): bool
     {
-        if (! Schema::connection($this->connection)->hasTable($this->table)) {
-            $this->create();
+        if (Schema::connection($this->connection)->hasTable($this->table)) {
+            return true;
         }
 
-        return Schema::connection($this->connection)->hasTable($this->table);
+        $this->create();
+
+        return true;
     }
 }
