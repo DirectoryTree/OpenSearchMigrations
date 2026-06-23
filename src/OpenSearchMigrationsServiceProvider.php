@@ -48,17 +48,17 @@ class OpenSearchMigrationsServiceProvider extends ServiceProvider
 
         $this->app->bind(IndexManagerInterface::class, IndexManagerAdapter::class);
 
-        $this->app->bind(MigrationRepository::class, function (Application $app) {
-            return new MigrationRepository(
-                $app['config']->get('opensearch-migrations.table'),
-                $app['config']->get('opensearch-migrations.connection')
-            );
-        });
-
         $this->app->bind(MigrationStorage::class, function (Application $app) {
             return new MigrationStorage(
                 $app->make(Filesystem::class),
                 $app['config']->get('opensearch-migrations.storage_directory')
+            );
+        });
+
+        $this->app->bind(MigrationRepository::class, function (Application $app) {
+            return new MigrationRepository(
+                $app['config']->get('opensearch-migrations.table'),
+                $app['config']->get('opensearch-migrations.connection')
             );
         });
 
