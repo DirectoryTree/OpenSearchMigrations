@@ -26,9 +26,7 @@ class MigrationStorage implements ReadinessInterface
      */
     public function create(string $fileName, string $content): MigrationFile
     {
-        if (! $this->filesystem->isDirectory($this->directory)) {
-            $this->filesystem->makeDirectory($this->directory, 0755, true);
-        }
+        $this->filesystem->ensureDirectoryExists($this->directory);
 
         $filePath = $this->resolvePath($fileName);
 
