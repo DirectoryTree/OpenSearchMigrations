@@ -8,6 +8,8 @@ use DirectoryTree\OpenSearchMigrations\Filesystem\MigrationStorage;
 use DirectoryTree\OpenSearchMigrations\Repositories\MigrationRepository;
 use Illuminate\Console\OutputStyle;
 use Illuminate\Support\Collection;
+use Symfony\Component\Console\Output\NullOutput;
+use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Runs and rolls back OpenSearch migration files.
@@ -17,7 +19,7 @@ class Migrator
     /**
      * The console output implementation.
      */
-    protected OutputStyle $output;
+    protected OutputInterface $output;
 
     /**
      * Create a new migrator instance.
@@ -26,7 +28,9 @@ class Migrator
         protected MigrationRepository $migrationRepository,
         protected MigrationStorage $migrationStorage,
         protected MigrationFactory $migrationFactory
-    ) {}
+    ) {
+        $this->output = new NullOutput;
+    }
 
     /**
      * Set the console output implementation.
@@ -133,7 +137,9 @@ class Migrator
             ];
         })->toArray();
 
-        $this->output->table($headers, $rows);
+        if ($this->output instanceof OutputStyle) {
+            $this->output->table($headers, $rows);
+        }
 
         return $this;
     }
