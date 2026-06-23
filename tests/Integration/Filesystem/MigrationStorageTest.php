@@ -33,14 +33,24 @@ it('creates the directory along with the file', function (): void {
     @rmdir($firstLevelDirectory);
 });
 
-it('is ready when the directory exists', function (): void {
-    expect(resolve(MigrationStorage::class)->isReady())->toBeTrue();
+it('prepares when the directory exists', function (): void {
+    $directory = config('opensearch-migrations.storage_directory');
+
+    resolve(MigrationStorage::class)->prepare();
+
+    expect($directory)->toBeDirectory();
 });
 
-it('is not ready when the directory does not exist', function (): void {
-    config()->set('opensearch-migrations.storage_directory', '/non_existing_directory');
+it('creates the directory when preparing', function (): void {
+    $directory = sys_get_temp_dir().'/opensearch_migrations_missing_storage';
 
-    expect(resolve(MigrationStorage::class)->isReady())->toBeFalse();
+    config()->set('opensearch-migrations.storage_directory', $directory);
+
+    resolve(MigrationStorage::class)->prepare();
+
+    expect($directory)->toBeDirectory();
+
+    @rmdir($directory);
 });
 
 it('finds existing files', function (string $fileName): void {

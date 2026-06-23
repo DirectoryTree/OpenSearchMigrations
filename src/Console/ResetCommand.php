@@ -35,9 +35,11 @@ class ResetCommand extends Command
     {
         $migrator->setOutput($this->output);
 
-        if (! $this->confirmToProceed() || ! $migrator->isReady()) {
+        if (! $this->confirmToProceed()) {
             return 1;
         }
+
+        $migrator->prepare();
 
         $migrator->rollbackAll();
 

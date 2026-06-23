@@ -31,10 +31,7 @@ class StatusCommand extends Command
     {
         $migrator->setOutput($this->output);
 
-        if (! $migrator->isReady()) {
-            return 1;
-        }
-
+        $migrator->prepare();
         $migrator->showStatus();
 
         return 0;

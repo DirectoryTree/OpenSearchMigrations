@@ -2,7 +2,6 @@
 
 namespace DirectoryTree\OpenSearchMigrations\Repositories;
 
-use DirectoryTree\OpenSearchMigrations\ReadinessInterface;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Collection;
@@ -13,7 +12,7 @@ use stdClass;
 /**
  * Stores and retrieves executed OpenSearch migration records.
  */
-class MigrationRepository implements ReadinessInterface
+class MigrationRepository
 {
     /**
      * Create a new migration repository instance.
@@ -132,16 +131,14 @@ class MigrationRepository implements ReadinessInterface
     }
 
     /**
-     * Determine if the migration repository is ready.
+     * Prepare the migration repository table.
      */
-    public function isReady(): bool
+    public function prepare(): void
     {
         if (Schema::connection($this->connection)->hasTable($this->table)) {
-            return true;
+            return;
         }
 
         $this->create();
-
-        return true;
     }
 }

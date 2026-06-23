@@ -14,7 +14,7 @@ function seededMigrator(OutputStyle $output): array
 {
     $table = config('opensearch-migrations.table');
 
-    app(MigrationRepository::class)->isReady();
+    app(MigrationRepository::class)->prepare();
 
     DB::table($table)->insert([
         ['migration' => '2018_12_01_081000_create_test_index', 'batch' => 1],
@@ -220,30 +220,33 @@ it('displays status', function (): void {
     expect($migrator->showStatus())->toBe($migrator);
 });
 
-it('is ready when the repository and storage are ready', function (): void {
+it('prepares the repository and storage', function (): void {
     [, $migrator] = seededMigrator(Mockery::mock(OutputStyle::class));
 
-    expect($migrator->isReady())->toBeTrue();
+    expect($migrator->prepare())->toBe($migrator);
 });
 
-it('creates the repository table when checking readiness', function (): void {
+it('creates the repository table when preparing', function (): void {
     $output = Mockery::mock(OutputStyle::class);
     [$table, $migrator] = seededMigrator($output);
 
     Schema::drop($table);
 
-    expect($migrator->isReady())->toBeTrue();
+    expect($migrator->prepare())->toBe($migrator);
     expect(Schema::hasTable($table))->toBeTrue();
 });
 
-it('is not ready when the storage is not ready', function (): void {
-    config()->set('opensearch-migrations.storage_directory', '/non_existing_directory');
+it('creates the storage directory when preparing', function (): void {
+    $directory = sys_get_temp_dir().'/opensearch_migrations_missing_directory';
 
-    $output = outputExpectingLines(['<error>Migration directory is not yet created</error>']);
+    config()->set('opensearch-migrations.storage_directory', $directory);
 
-    seededMigrator($output);
+    $output = Mockery::mock(OutputStyle::class);
 
     $migrator = resolve(Migrator::class)->setOutput($output);
 
-    expect($migrator->isReady())->toBeFalse();
+    expect($migrator->prepare())->toBe($migrator);
+    expect($directory)->toBeDirectory();
+
+    @rmdir($directory);
 });

@@ -12,7 +12,7 @@ use Illuminate\Support\Collection;
 /**
  * Runs and rolls back OpenSearch migration files.
  */
-class Migrator implements ReadinessInterface
+class Migrator
 {
     /**
      * The console output implementation.
@@ -208,18 +208,13 @@ class Migrator implements ReadinessInterface
     }
 
     /**
-     * Determine if migrations can be run.
+     * Prepare the migration repository and storage.
      */
-    public function isReady(): bool
+    public function prepare(): self
     {
-        if (! $isMigrationRepositoryReady = $this->migrationRepository->isReady()) {
-            $this->output->writeln('<error>Migration table is not yet created</error>');
-        }
+        $this->migrationRepository->prepare();
+        $this->migrationStorage->prepare();
 
-        if (! $isMigrationStorageReady = $this->migrationStorage->isReady()) {
-            $this->output->writeln('<error>Migration directory is not yet created</error>');
-        }
-
-        return $isMigrationRepositoryReady && $isMigrationStorageReady;
+        return $this;
     }
 }

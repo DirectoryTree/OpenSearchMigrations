@@ -12,7 +12,7 @@ function seedMigrationRepositoryTable(): string
     $table = config('opensearch-migrations.table');
     $repository = app(MigrationRepository::class);
 
-    $repository->isReady();
+    $repository->prepare();
 
     DB::table($table)->insert([
         ['migration' => '2019_08_10_142230_update_test_index_mapping', 'batch' => 2],
@@ -22,12 +22,12 @@ function seedMigrationRepositoryTable(): string
     return $table;
 }
 
-it('creates the repository table when it is missing', function (): void {
+it('prepares the repository table when it is missing', function (): void {
     $table = config('opensearch-migrations.table');
 
     expect(Schema::hasTable($table))->toBeFalse();
 
-    expect(app(MigrationRepository::class)->isReady())->toBeTrue();
+    app(MigrationRepository::class)->prepare();
 
     expect(Schema::hasTable($table))->toBeTrue();
 });
@@ -68,7 +68,7 @@ it('uses the configured database connection for the repository table', function 
 
     $repository = app(MigrationRepository::class);
 
-    $repository->isReady();
+    $repository->prepare();
 
     expect(Schema::hasTable('custom_opensearch_migrations'))->toBeFalse();
     expect(Schema::connection('opensearch_migrations')->hasTable('custom_opensearch_migrations'))->toBeTrue();
@@ -123,18 +123,21 @@ it('gets the last batch records', function (): void {
     ]);
 });
 
-it('is ready when the table exists', function (): void {
+it('prepares when the table exists', function (): void {
     seedMigrationRepositoryTable();
 
-    expect(app(MigrationRepository::class)->isReady())->toBeTrue();
+    app(MigrationRepository::class)->prepare();
+
+    expect(Schema::hasTable(config('opensearch-migrations.table')))->toBeTrue();
 });
 
-it('is ready after creating a missing table', function (): void {
+it('prepares after creating a missing table', function (): void {
     $table = seedMigrationRepositoryTable();
 
     Schema::drop($table);
 
-    expect(app(MigrationRepository::class)->isReady())->toBeTrue();
+    app(MigrationRepository::class)->prepare();
+
     expect(Schema::hasTable($table))->toBeTrue();
 });
 

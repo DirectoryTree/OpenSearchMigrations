@@ -2,14 +2,13 @@
 
 namespace DirectoryTree\OpenSearchMigrations\Filesystem;
 
-use DirectoryTree\OpenSearchMigrations\ReadinessInterface;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Collection;
 
 /**
  * Stores and retrieves OpenSearch migration files.
  */
-class MigrationStorage implements ReadinessInterface
+class MigrationStorage
 {
     /**
      * Create a new migration storage instance.
@@ -70,10 +69,10 @@ class MigrationStorage implements ReadinessInterface
     }
 
     /**
-     * Determine if the migration storage directory exists.
+     * Prepare the migration storage directory.
      */
-    public function isReady(): bool
+    public function prepare(): void
     {
-        return $this->filesystem->isDirectory($this->directory);
+        $this->filesystem->ensureDirectoryExists($this->directory);
     }
 }

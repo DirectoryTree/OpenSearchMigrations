@@ -36,9 +36,11 @@ class RollbackCommand extends Command
     {
         $migrator->setOutput($this->output);
 
-        if (! $this->confirmToProceed() || ! $migrator->isReady()) {
+        if (! $this->confirmToProceed()) {
             return 1;
         }
+
+        $migrator->prepare();
 
         if ($fileName = $this->argument('fileName')) {
             $migrator->rollbackOne($fileName);
