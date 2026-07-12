@@ -14,6 +14,7 @@ use DirectoryTree\OpenSearchMigrations\Console\ResetCommand;
 use DirectoryTree\OpenSearchMigrations\Console\RollbackCommand;
 use DirectoryTree\OpenSearchMigrations\Console\StatusCommand;
 use DirectoryTree\OpenSearchMigrations\Filesystem\MigrationStorage;
+use DirectoryTree\OpenSearchMigrations\Repositories\DeploymentRepository;
 use DirectoryTree\OpenSearchMigrations\Repositories\MigrationRepository;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Filesystem\Filesystem;
@@ -45,6 +46,7 @@ class OpenSearchMigrationsServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/opensearch-migrations.php', 'opensearch-migrations');
+        $this->mergeConfigFrom(__DIR__.'/../config/opensearch-deployments.php', 'opensearch-deployments');
 
         $this->app->bind(IndexManagerInterface::class, IndexManagerAdapter::class);
 
@@ -62,6 +64,13 @@ class OpenSearchMigrationsServiceProvider extends ServiceProvider
             );
         });
 
+        $this->app->bind(DeploymentRepository::class, function (Application $app) {
+            return new DeploymentRepository(
+                $app['config']->get('opensearch-deployments.table'),
+                $app['config']->get('opensearch-deployments.connection')
+            );
+        });
+
         $this->app->singleton(IndexManager::class, function (Application $app) {
             return new IndexManager($app->make(OpenSearchManager::class)->default());
         });
@@ -76,6 +85,7 @@ class OpenSearchMigrationsServiceProvider extends ServiceProvider
     {
         $this->publishes([
             __DIR__.'/../config/opensearch-migrations.php' => config_path('opensearch-migrations.php'),
+            __DIR__.'/../config/opensearch-deployments.php' => config_path('opensearch-deployments.php'),
         ]);
 
         $this->commands($this->commands);

@@ -25,7 +25,7 @@ Publish the OpenSearch client configuration:
 php artisan vendor:publish --provider="DirectoryTree\OpenSearchClient\OpenSearchClientServiceProvider"
 ```
 
-Publish the migration configuration:
+Publish the migration and deployment configuration:
 
 ```bash
 php artisan vendor:publish --provider="DirectoryTree\OpenSearchMigrations\OpenSearchMigrationsServiceProvider"
@@ -33,7 +33,7 @@ php artisan vendor:publish --provider="DirectoryTree\OpenSearchMigrations\OpenSe
 
 ## Configuration
 
-The migration configuration is published to `config/opensearch-migrations.php`:
+Migration history and index naming are configured in `config/opensearch-migrations.php`:
 
 ```php
 'table' => env('OPENSEARCH_MIGRATIONS_TABLE', 'opensearch_migrations'),
@@ -45,6 +45,17 @@ The migration configuration is published to `config/opensearch-migrations.php`:
 'index_name_prefix' => env('OPENSEARCH_MIGRATIONS_INDEX_NAME_PREFIX', env('SCOUT_PREFIX', '')),
 
 'alias_name_prefix' => env('OPENSEARCH_MIGRATIONS_ALIAS_NAME_PREFIX', env('SCOUT_PREFIX', '')),
+```
+
+Deployment storage is configured separately in `config/opensearch-deployments.php`:
+
+```php
+'table' => env('OPENSEARCH_DEPLOYMENTS_TABLE', 'opensearch_deployments'),
+
+'connection' => env(
+    'OPENSEARCH_DEPLOYMENTS_CONNECTION',
+    env('OPENSEARCH_MIGRATIONS_CONNECTION')
+),
 ```
 
 ## Creating Migrations
@@ -123,6 +134,74 @@ Show migration status:
 ```bash
 php artisan opensearch:migrate:status
 ```
+
+## Zero-Downtime Index Deployments
+
+The deployer creates versioned physical indexes and tracks their lifecycle in the `opensearch_deployments` table. Applications remain responsible for backfilling and validating candidate documents.
+
+First, create a stable alias for the index in a migration:
+
+```php
+Index::putAlias('posts', 'posts_search');
+```
+
+Start a deployment with the latest mapping and settings:
+
+```php
+use DirectoryTree\OpenSearchAdapter\Indices\Mapping;
+use DirectoryTree\OpenSearchAdapter\Indices\Settings;
+use DirectoryTree\OpenSearchMigrations\Deployer;
+
+$deployer = app(Deployer::class);
+
+$deployment = $deployer->start(
+    name: 'posts',
+    alias: 'posts_search',
+    configure: function (Mapping $mapping, Settings $settings) {
+        $mapping->text('title');
+        $mapping->text('body');
+    },
+);
+```
+
+The returned deployment exposes the physical candidate index for backfilling:
+
+```php
+$deployment->candidateIndex;
+```
+
+While backfilling, send live writes and deletions to every deployment write index:
+
+```php
+$deployment->writeIndexes();
+```
+
+After application-specific validation succeeds, mark the candidate ready and atomically move the alias:
+
+```php
+$deployer->markReady('posts');
+$deployer->cutover('posts');
+```
+
+Cancel and delete a candidate that should not be promoted:
+
+```php
+$deployer->cancel('posts');
+```
+
+The previous index remains in the deployment's write indexes during the rollback window:
+
+```php
+$deployer->rollback('posts');
+```
+
+Once the new index is verified in production, delete the previous physical index and complete the deployment:
+
+```php
+$deployer->retire('posts');
+```
+
+`opensearch:migrate:fresh` deletes all deployment records because it drops all physical indexes. Migration reset and refresh commands refuse to run while managed deployments exist.
 
 ## Credits
 

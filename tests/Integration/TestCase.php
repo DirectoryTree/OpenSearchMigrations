@@ -23,6 +23,7 @@ class TestCase extends TestbenchTestCase
         parent::getEnvironmentSetUp($app);
 
         $app['config']->set('opensearch-migrations.table', 'test_opensearch_migrations');
+        $app['config']->set('opensearch-deployments.table', 'test_opensearch_deployments');
         $app['config']->set('opensearch-migrations.storage_directory', realpath(__DIR__.'/../migrations'));
 
         $client = $this->createMock(Client::class);

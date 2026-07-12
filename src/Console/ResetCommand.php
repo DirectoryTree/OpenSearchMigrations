@@ -3,6 +3,7 @@
 namespace DirectoryTree\OpenSearchMigrations\Console;
 
 use DirectoryTree\OpenSearchMigrations\Migrator;
+use DirectoryTree\OpenSearchMigrations\Repositories\DeploymentRepository;
 use Illuminate\Console\Command;
 use Illuminate\Console\ConfirmableTrait;
 
@@ -31,7 +32,7 @@ class ResetCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle(Migrator $migrator): int
+    public function handle(Migrator $migrator, DeploymentRepository $deployments): int
     {
         $migrator->setOutput($this->output);
 
@@ -40,6 +41,13 @@ class ResetCommand extends Command
         }
 
         $migrator->prepare();
+        $deployments->prepare();
+
+        if ($deployments->exists()) {
+            $this->components->error('Managed indexes cannot be reset. Use opensearch:migrate:fresh to discard them.');
+
+            return static::FAILURE;
+        }
 
         $migrator->rollbackAll();
 
