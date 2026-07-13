@@ -61,7 +61,7 @@ it('provisions a versioned candidate before enabling concurrent writes', functio
         ->and($deployment->status)->toBe(DeploymentStatus::Provisioned)
         ->and($deployment->writeIndexes())->toBe(['test_posts_search']);
 
-    $deployment = $manager->beginBackfill('posts');
+    $deployment = $manager->backfill('posts');
 
     expect($deployment->status)->toBe(DeploymentStatus::Backfilling)
         ->and($deployment->writeIndexes())->toBe([
@@ -107,7 +107,7 @@ it('marks a candidate ready and cuts over its alias atomically', function (): vo
 
     $manager = new Deployer($repository, $indexes, $adapterIndexes, $openSearch);
 
-    expect($manager->beginBackfill('posts')->status)->toBe(DeploymentStatus::Backfilling);
+    expect($manager->backfill('posts')->status)->toBe(DeploymentStatus::Backfilling);
     expect($manager->markReady('posts')->status)->toBe(DeploymentStatus::Ready);
 
     $deployment = $manager->cutover('posts');

@@ -174,9 +174,15 @@ $deployment->writeIndexes(); // ['posts_search']
 Once the candidate has been inspected, begin backfilling before importing historical documents. This enables concurrent writes and deletions to the candidate:
 
 ```php
-$deployment = $deployer->beginBackfill('posts');
+$deployment = $deployer->backfill('posts');
 
 $deployment->writeIndexes();
+```
+
+The same transition is available from the command line:
+
+```bash
+php artisan opensearch:deploy:backfill posts
 ```
 
 After application-specific validation succeeds, mark the candidate ready and atomically move the alias:
@@ -186,10 +192,19 @@ $deployer->markReady('posts');
 $deployer->cutover('posts');
 ```
 
+```bash
+php artisan opensearch:deploy:ready posts
+php artisan opensearch:deploy:cutover posts
+```
+
 Cancel and delete a candidate that should not be promoted:
 
 ```php
 $deployer->cancel('posts');
+```
+
+```bash
+php artisan opensearch:deploy:cancel posts
 ```
 
 The previous index remains in the deployment's write indexes during the rollback window:
@@ -198,10 +213,25 @@ The previous index remains in the deployment's write indexes during the rollback
 $deployer->rollback('posts');
 ```
 
+```bash
+php artisan opensearch:deploy:rollback posts
+```
+
 Once the new index is verified in production, delete the previous physical index and complete the deployment:
 
 ```php
 $deployer->retire('posts');
+```
+
+```bash
+php artisan opensearch:deploy:retire posts
+```
+
+Inspect one or every deployment at any point in the lifecycle:
+
+```bash
+php artisan opensearch:deploy:status
+php artisan opensearch:deploy:status posts
 ```
 
 `opensearch:migrate:fresh` deletes all deployment records because it drops all physical indexes. Migration reset and refresh commands refuse to run while managed deployments exist.

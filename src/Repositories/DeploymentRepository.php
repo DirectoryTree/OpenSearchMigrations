@@ -6,9 +6,11 @@ use DirectoryTree\OpenSearchMigrations\Deployments\Deployment;
 use DirectoryTree\OpenSearchMigrations\Deployments\DeploymentException;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use stdClass;
 
 class DeploymentRepository
 {
@@ -60,6 +62,18 @@ class DeploymentRepository
     {
         return $this->find($name)
             ?? throw new DeploymentException("OpenSearch deployment [{$name}] does not exist.");
+    }
+
+    /**
+     * Get all deployments.
+     *
+     * @return Collection<int, Deployment>
+     */
+    public function all(): Collection
+    {
+        return $this->table()->orderBy('name')->get()->map(
+            fn (stdClass $record) => Deployment::fromRecord($record)
+        );
     }
 
     /**

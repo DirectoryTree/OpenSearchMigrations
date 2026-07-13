@@ -6,6 +6,13 @@ use DirectoryTree\OpenSearchAdapter\Indices\IndexManager;
 use DirectoryTree\OpenSearchAdapter\Indices\IndexManagerInterface as AdapterIndexManagerInterface;
 use DirectoryTree\OpenSearchClient\OpenSearchManager;
 use DirectoryTree\OpenSearchMigrations\Adapters\IndexManagerAdapter;
+use DirectoryTree\OpenSearchMigrations\Console\DeploymentBackfillCommand;
+use DirectoryTree\OpenSearchMigrations\Console\DeploymentCancelCommand;
+use DirectoryTree\OpenSearchMigrations\Console\DeploymentCutoverCommand;
+use DirectoryTree\OpenSearchMigrations\Console\DeploymentReadyCommand;
+use DirectoryTree\OpenSearchMigrations\Console\DeploymentRetireCommand;
+use DirectoryTree\OpenSearchMigrations\Console\DeploymentRollbackCommand;
+use DirectoryTree\OpenSearchMigrations\Console\DeploymentStatusCommand;
 use DirectoryTree\OpenSearchMigrations\Console\FreshCommand;
 use DirectoryTree\OpenSearchMigrations\Console\MakeCommand;
 use DirectoryTree\OpenSearchMigrations\Console\MigrateCommand;
@@ -31,6 +38,13 @@ class OpenSearchMigrationsServiceProvider extends ServiceProvider
      * @var array<int, class-string>
      */
     protected array $commands = [
+        DeploymentBackfillCommand::class,
+        DeploymentCancelCommand::class,
+        DeploymentCutoverCommand::class,
+        DeploymentReadyCommand::class,
+        DeploymentRetireCommand::class,
+        DeploymentRollbackCommand::class,
+        DeploymentStatusCommand::class,
         MakeCommand::class,
         ResetCommand::class,
         FreshCommand::class,

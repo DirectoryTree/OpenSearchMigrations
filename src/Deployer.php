@@ -61,7 +61,7 @@ class Deployer
     /**
      * Begin backfilling a provisioned candidate index.
      */
-    public function beginBackfill(string $name): Deployment
+    public function backfill(string $name): Deployment
     {
         $deployment = $this->deployments->findOrFail($name);
 
