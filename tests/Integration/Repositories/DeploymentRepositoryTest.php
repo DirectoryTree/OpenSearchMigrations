@@ -38,7 +38,7 @@ it('stores and retrieves deployment state', function (): void {
     $repository = app(DeploymentRepository::class);
     $repository->prepare();
 
-    $deployment = $repository->save(Deployment::backfilling(
+    $deployment = $repository->save(Deployment::provisioned(
         name: 'posts',
         alias: 'posts_search',
         activeIndex: 'posts_blue',
@@ -51,7 +51,7 @@ it('stores and retrieves deployment state', function (): void {
         ->and($deployment->activeIndex)->toBe('posts_blue')
         ->and($deployment->candidateIndex)->toBe('posts_green')
         ->and($deployment->previousIndex)->toBeNull()
-        ->and($deployment->status)->toBe(DeploymentStatus::Backfilling)
+        ->and($deployment->status)->toBe(DeploymentStatus::Provisioned)
         ->and($deployment->createdAt->toDateTimeString())->toBe('2026-07-12 12:00:00');
 });
 
@@ -61,7 +61,7 @@ it('updates deployment state without replacing its creation time', function (): 
     $repository = app(DeploymentRepository::class);
     $repository->prepare();
 
-    $repository->save(Deployment::backfilling(
+    $repository->save(Deployment::provisioned(
         name: 'posts',
         alias: 'posts_search',
         activeIndex: 'posts_blue',
@@ -72,7 +72,7 @@ it('updates deployment state without replacing its creation time', function (): 
     Date::setTestNow('2026-07-12 13:00:00');
 
     $deployment = $repository->save(
-        $repository->findOrFail('posts')->markReady(Date::now())
+        $repository->findOrFail('posts')->beginBackfill()->markReady(Date::now())
     );
 
     expect($deployment->status)->toBe(DeploymentStatus::Ready)
@@ -100,7 +100,7 @@ it('checks for and deletes all deployment records', function (): void {
 
     expect($repository->exists())->toBeFalse();
 
-    $repository->save(Deployment::backfilling(
+    $repository->save(Deployment::provisioned(
         name: 'posts',
         alias: 'posts_search',
         activeIndex: 'posts_blue',

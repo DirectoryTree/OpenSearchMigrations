@@ -25,9 +25,9 @@ class Deployer
     ) {}
 
     /**
-     * Create a candidate index and begin a deployment.
+     * Provision a candidate index without enabling concurrent writes.
      */
-    public function start(
+    public function provision(
         string $name,
         string $alias,
         ?callable $configure = null,
@@ -48,7 +48,7 @@ class Deployer
         $this->indexes->create($candidate, $configure);
 
         return $this->deployments->save(
-            Deployment::backfilling(
+            Deployment::provisioned(
                 name: $name,
                 alias: $prefixedAlias,
                 activeIndex: $activeIndex,
@@ -59,14 +59,30 @@ class Deployer
     }
 
     /**
+     * Begin backfilling a provisioned candidate index.
+     */
+    public function beginBackfill(string $name): Deployment
+    {
+        $deployment = $this->deployments->findOrFail($name);
+
+        if ($deployment->status !== DeploymentStatus::Provisioned || ! $deployment->candidateIndex) {
+            throw new DeploymentException('The candidate index must be provisioned before backfilling.');
+        }
+
+        return $this->deployments->save(
+            $deployment->beginBackfill()
+        );
+    }
+
+    /**
      * Mark a candidate index as ready for cutover.
      */
     public function markReady(string $name): Deployment
     {
         $deployment = $this->deployments->findOrFail($name);
 
-        if (! $deployment->candidateIndex) {
-            throw new DeploymentException('The deployment does not have a candidate index to mark as ready.');
+        if ($deployment->status !== DeploymentStatus::Backfilling || ! $deployment->candidateIndex) {
+            throw new DeploymentException('The candidate index must be backfilling before it can be marked as ready.');
         }
 
         return $this->deployments->save(

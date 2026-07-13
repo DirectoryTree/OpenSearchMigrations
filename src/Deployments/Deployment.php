@@ -9,9 +9,9 @@ use stdClass;
 class Deployment
 {
     /**
-     * Create a deployment that is ready to be backfilled.
+     * Create a deployment with a provisioned candidate index.
      */
-    public static function backfilling(
+    public static function provisioned(
         string $name,
         string $alias,
         string $activeIndex,
@@ -27,7 +27,7 @@ class Deployment
             activeIndex: $activeIndex,
             candidateIndex: $candidateIndex,
             previousIndex: null,
-            status: DeploymentStatus::Backfilling,
+            status: DeploymentStatus::Provisioned,
             readyAt: null,
             cutoverAt: null,
             createdAt: $now,
@@ -71,6 +71,21 @@ class Deployment
         public CarbonImmutable $createdAt,
         public CarbonImmutable $updatedAt,
     ) {}
+
+    /**
+     * Begin backfilling the candidate index.
+     */
+    public function beginBackfill(): static
+    {
+        return $this->transition(
+            activeIndex: $this->activeIndex,
+            candidateIndex: $this->candidateIndex,
+            previousIndex: $this->previousIndex,
+            status: DeploymentStatus::Backfilling,
+            readyAt: $this->readyAt,
+            cutoverAt: $this->cutoverAt,
+        );
+    }
 
     /**
      * Mark the candidate index as ready for cutover.
@@ -184,9 +199,14 @@ class Deployment
      */
     public function writeIndexes(): array
     {
+        $candidate = in_array($this->status, [
+            DeploymentStatus::Backfilling,
+            DeploymentStatus::Ready,
+        ], true) ? $this->candidateIndex : null;
+
         return array_values(array_unique(array_filter([
             $this->alias,
-            $this->candidateIndex,
+            $candidate,
             $this->previousIndex,
         ])));
     }

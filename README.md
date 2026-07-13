@@ -145,7 +145,7 @@ First, create a stable alias for the index in a migration:
 Index::putAlias('posts', 'posts_search');
 ```
 
-Start a deployment with the latest mapping and settings:
+Provision a candidate with the latest mapping and settings:
 
 ```php
 use DirectoryTree\OpenSearchAdapter\Indices\Mapping;
@@ -154,7 +154,7 @@ use DirectoryTree\OpenSearchMigrations\Deployer;
 
 $deployer = app(Deployer::class);
 
-$deployment = $deployer->start(
+$deployment = $deployer->provision(
     name: 'posts',
     alias: 'posts_search',
     configure: function (Mapping $mapping, Settings $settings) {
@@ -164,15 +164,18 @@ $deployment = $deployer->start(
 );
 ```
 
-The returned deployment exposes the physical candidate index for backfilling:
+The returned deployment exposes the physical candidate index for inspection while writes continue targeting only the active alias:
 
 ```php
 $deployment->candidateIndex;
+$deployment->writeIndexes(); // ['posts_search']
 ```
 
-While backfilling, send live writes and deletions to every deployment write index:
+Once the candidate has been inspected, begin backfilling before importing historical documents. This enables concurrent writes and deletions to the candidate:
 
 ```php
+$deployment = $deployer->beginBackfill('posts');
+
 $deployment->writeIndexes();
 ```
 

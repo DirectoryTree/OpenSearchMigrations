@@ -29,7 +29,7 @@ it('resets and reruns all migrations', function (): void {
 it('refuses to refresh while managed deployments exist', function (): void {
     $deployments = app(DeploymentRepository::class);
     $deployments->prepare();
-    $deployments->save(Deployment::backfilling(
+    $deployments->save(Deployment::provisioned(
         name: 'posts',
         alias: 'posts_search',
         activeIndex: 'posts_blue',

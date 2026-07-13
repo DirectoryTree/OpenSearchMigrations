@@ -18,7 +18,7 @@ it('drops indices and migrations', function (): void {
     $index = Mockery::mock(IndexManagerInterface::class);
     $deployments = app(DeploymentRepository::class);
     $deployments->prepare();
-    $deployments->save(Deployment::backfilling(
+    $deployments->save(Deployment::provisioned(
         name: 'posts',
         alias: 'posts_search',
         activeIndex: 'posts_blue',

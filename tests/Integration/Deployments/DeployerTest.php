@@ -19,7 +19,7 @@ use OpenSearch\Namespaces\IndicesNamespace;
 
 uses(RefreshDatabase::class);
 
-it('creates a versioned candidate and records deployment state', function (): void {
+it('provisions a versioned candidate before enabling concurrent writes', function (): void {
     Date::setTestNow('2026-07-12 12:34:56.789');
     config()->set('opensearch-migrations.index_name_prefix', 'test_');
     config()->set('opensearch-migrations.alias_name_prefix', 'test_');
@@ -43,7 +43,7 @@ it('creates a versioned candidate and records deployment state', function (): vo
 
     $manager = new Deployer($repository, $indexes, $adapterIndexes, $openSearch);
 
-    $deployment = $manager->start('posts', 'posts_search', function (Mapping $mapping, Settings $settings): void {
+    $deployment = $manager->provision('posts', 'posts_search', function (Mapping $mapping, Settings $settings): void {
         $mapping->text('title');
         $settings->index(['number_of_replicas' => 0]);
     });
@@ -58,13 +58,22 @@ it('creates a versioned candidate and records deployment state', function (): vo
         ->and($deployment->alias)->toBe('test_posts_search')
         ->and($deployment->activeIndex)->toBe('test_posts_blue')
         ->and($deployment->candidateIndex)->toBe('test_posts_v20260712123456789')
-        ->and($deployment->status)->toBe(DeploymentStatus::Backfilling);
+        ->and($deployment->status)->toBe(DeploymentStatus::Provisioned)
+        ->and($deployment->writeIndexes())->toBe(['test_posts_search']);
+
+    $deployment = $manager->beginBackfill('posts');
+
+    expect($deployment->status)->toBe(DeploymentStatus::Backfilling)
+        ->and($deployment->writeIndexes())->toBe([
+            'test_posts_search',
+            'test_posts_v20260712123456789',
+        ]);
 });
 
 it('marks a candidate ready and cuts over its alias atomically', function (): void {
     $repository = app(DeploymentRepository::class);
     $repository->prepare();
-    $repository->save(Deployment::backfilling(
+    $repository->save(Deployment::provisioned(
         name: 'posts',
         alias: 'posts_search',
         activeIndex: 'posts_blue',
@@ -98,6 +107,7 @@ it('marks a candidate ready and cuts over its alias atomically', function (): vo
 
     $manager = new Deployer($repository, $indexes, $adapterIndexes, $openSearch);
 
+    expect($manager->beginBackfill('posts')->status)->toBe(DeploymentStatus::Backfilling);
     expect($manager->markReady('posts')->status)->toBe(DeploymentStatus::Ready);
 
     $deployment = $manager->cutover('posts');
@@ -108,16 +118,37 @@ it('marks a candidate ready and cuts over its alias atomically', function (): vo
         ->and($deployment->status)->toBe(DeploymentStatus::Active);
 });
 
-it('finishes a cutover when the alias was already moved', function (): void {
+it('does not mark a provisioned candidate ready before backfilling begins', function (): void {
     $repository = app(DeploymentRepository::class);
     $repository->prepare();
-    $repository->save(Deployment::backfilling(
+    $repository->save(Deployment::provisioned(
         name: 'posts',
         alias: 'posts_search',
         activeIndex: 'posts_blue',
         candidateIndex: 'posts_green',
         now: Date::now(),
-    )->markReady(Date::now())->stageCutover());
+    ));
+
+    $adapterIndexes = new FakeIndexManager;
+    $indexes = new IndexManagerAdapter($adapterIndexes);
+    $openSearch = mock(OpenSearchManager::class);
+
+    $deployer = new Deployer($repository, $indexes, $adapterIndexes, $openSearch);
+
+    expect(fn () => $deployer->markReady('posts'))
+        ->toThrow(DeploymentException::class, 'The candidate index must be backfilling before it can be marked as ready.');
+});
+
+it('finishes a cutover when the alias was already moved', function (): void {
+    $repository = app(DeploymentRepository::class);
+    $repository->prepare();
+    $repository->save(Deployment::provisioned(
+        name: 'posts',
+        alias: 'posts_search',
+        activeIndex: 'posts_blue',
+        candidateIndex: 'posts_green',
+        now: Date::now(),
+    )->beginBackfill()->markReady(Date::now())->stageCutover());
 
     $adapterIndexes = new FakeIndexManager;
     $indexes = new IndexManagerAdapter($adapterIndexes);
@@ -144,13 +175,13 @@ it('finishes a cutover when the alias was already moved', function (): void {
 it('rolls a deployment back atomically', function (): void {
     $repository = app(DeploymentRepository::class);
     $repository->prepare();
-    $repository->save(Deployment::backfilling(
+    $repository->save(Deployment::provisioned(
         name: 'posts',
         alias: 'posts_search',
         activeIndex: 'posts_blue',
         candidateIndex: 'posts_green',
         now: Date::now(),
-    )->markReady(Date::now())->stageCutover()->completeCutover(Date::now()));
+    )->beginBackfill()->markReady(Date::now())->stageCutover()->completeCutover(Date::now()));
 
     $adapterIndexes = new FakeIndexManager;
     $indexes = new IndexManagerAdapter($adapterIndexes);
@@ -177,7 +208,7 @@ it('rolls a deployment back atomically', function (): void {
 it('cancels and deletes a candidate index', function (): void {
     $repository = app(DeploymentRepository::class);
     $repository->prepare();
-    $repository->save(Deployment::backfilling(
+    $repository->save(Deployment::provisioned(
         name: 'posts',
         alias: 'posts_search',
         activeIndex: 'posts_blue',
@@ -211,13 +242,13 @@ it('cancels and deletes a candidate index', function (): void {
 it('retires the previous physical index', function (): void {
     $repository = app(DeploymentRepository::class);
     $repository->prepare();
-    $repository->save(Deployment::backfilling(
+    $repository->save(Deployment::provisioned(
         name: 'posts',
         alias: 'posts_search',
         activeIndex: 'posts_blue',
         candidateIndex: 'posts_green',
         now: Date::now(),
-    )->markReady(Date::now())->stageCutover()->completeCutover(Date::now()));
+    )->beginBackfill()->markReady(Date::now())->stageCutover()->completeCutover(Date::now()));
 
     $adapterIndexes = new FakeIndexManager;
     $indexes = new IndexManagerAdapter($adapterIndexes);
@@ -234,13 +265,13 @@ it('retires the previous physical index', function (): void {
 it('restores deployment state when retirement fails', function (): void {
     $repository = app(DeploymentRepository::class);
     $repository->prepare();
-    $repository->save(Deployment::backfilling(
+    $repository->save(Deployment::provisioned(
         name: 'posts',
         alias: 'posts_search',
         activeIndex: 'posts_blue',
         candidateIndex: 'posts_green',
         now: Date::now(),
-    )->markReady(Date::now())->stageCutover()->completeCutover(Date::now()));
+    )->beginBackfill()->markReady(Date::now())->stageCutover()->completeCutover(Date::now()));
 
     $adapterIndexes = mock(AdapterIndexManagerInterface::class);
     $adapterIndexes->shouldReceive('delete')->once()->andThrow(new DeploymentException('Delete failed.'));
