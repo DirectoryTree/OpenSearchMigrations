@@ -4,6 +4,7 @@ namespace DirectoryTree\OpenSearchMigrations\Console;
 
 use DirectoryTree\OpenSearchMigrations\IndexManagerInterface;
 use DirectoryTree\OpenSearchMigrations\Migrator;
+use DirectoryTree\OpenSearchMigrations\Repositories\DeploymentRepository;
 use DirectoryTree\OpenSearchMigrations\Repositories\MigrationRepository;
 use Illuminate\Console\Command;
 use Illuminate\Console\ConfirmableTrait;
@@ -33,6 +34,7 @@ class FreshCommand extends Command
         Migrator $migrator,
         IndexManagerInterface $index,
         MigrationRepository $migrations,
+        DeploymentRepository $deployments,
     ): int {
         $migrator->setOutput($this->output);
 
@@ -41,10 +43,12 @@ class FreshCommand extends Command
         }
 
         $migrator->prepare();
+        $deployments->prepare();
 
         $index->drop('*');
 
         $migrations->deleteAll();
+        $deployments->deleteAll();
 
         $migrator->migrateAll();
 

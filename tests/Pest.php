@@ -8,6 +8,7 @@ uses(IntegrationTestCase::class)->in(
     'Integration/Factories',
     'Integration/Filesystem',
     'Integration/Repositories',
+    'Integration/Deployments',
     'Integration/Support',
     'Integration/MigratorTest.php',
 );
@@ -15,4 +16,4 @@ uses(IntegrationTestCase::class)->in(
     'Unit/Adapters',
     'Unit/Facades',
 );
-uses(UnitTestCase::class)->in('Unit/Filesystem');
+uses(UnitTestCase::class)->in('Unit/Deployments', 'Unit/Filesystem');
