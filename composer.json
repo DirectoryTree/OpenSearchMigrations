@@ -53,5 +53,7 @@
         "DirectoryTree\\OpenSearchMigrations\\OpenSearchMigrationsServiceProvider"
       ]
     }
-  }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
 }
