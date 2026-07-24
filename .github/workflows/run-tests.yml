@@ -50,9 +50,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          ruby -rjson -e 'composer = JSON.parse(File.read("composer.json")); composer["repositories"] = [{"type" => "vcs", "url" => "https://github.com/DirectoryTree/OpenSearchAdapter"}, {"type" => "vcs", "url" => "https://github.com/DirectoryTree/OpenSearchClient"}]; File.write("composer.json", JSON.pretty_generate(composer))'
-          composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update --no-blocking
-          composer update --prefer-dist --no-interaction --no-blocking
+          composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
+          composer update --prefer-dist --no-interaction
 
       - name: Wait for OpenSearch
         run: |
