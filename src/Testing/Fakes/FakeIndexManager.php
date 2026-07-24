@@ -149,16 +149,12 @@ class FakeIndexManager implements IndexManagerInterface
      */
     public function assertCreated(string $index, ?callable $callback = null): static
     {
-        $assertion = isset($callback)
-            ? fn (IndexBlueprint $index): bool => $callback(
-                $index->mapping(),
-                $index->settings(),
-            )
-            : null;
-
         $this->manager->assertCreated(
             MigrationPrefix::index($index),
-            $assertion,
+            $callback ? fn (IndexBlueprint $index): bool => $callback(
+                $index->mapping(),
+                $index->settings(),
+            ) : null,
         );
 
         return $this;
