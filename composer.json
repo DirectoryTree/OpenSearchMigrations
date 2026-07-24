@@ -27,7 +27,7 @@
   },
   "require": {
     "php": "^8.2",
-    "directorytree/opensearch-adapter": "^1.2.2",
+    "directorytree/opensearch-adapter": "^1.2.1",
     "directorytree/opensearch-client": "^1.0",
     "illuminate/console": "^11.0|^12.0|^13.0",
     "illuminate/database": "^11.0|^12.0|^13.0",
