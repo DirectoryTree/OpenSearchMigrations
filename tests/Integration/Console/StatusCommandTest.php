@@ -5,7 +5,7 @@ use DirectoryTree\OpenSearchMigrations\Migrator;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\NullOutput;
 
-it('shows migration status', function (): void {
+it('shows migration status', function () {
     $migrator = Mockery::mock(Migrator::class);
     app()->instance(Migrator::class, $migrator);
 

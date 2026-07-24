@@ -144,10 +144,18 @@ class FakeIndexManager implements IndexManagerInterface
 
     /**
      * Assert that the given index was created.
+     *
+     * @param  (callable(?Mapping, ?Settings): bool)|null  $callback
      */
-    public function assertCreated(string $index, ?callable $modifier = null): static
+    public function assertCreated(string $index, ?callable $callback = null): static
     {
-        $this->manager->assertCreated($this->blueprint($index, $modifier));
+        $this->manager->assertCreated(
+            MigrationPrefix::index($index),
+            $callback ? fn (IndexBlueprint $index): bool => $callback(
+                $index->mapping(),
+                $index->settings(),
+            ) : null,
+        );
 
         return $this;
     }
@@ -164,24 +172,30 @@ class FakeIndexManager implements IndexManagerInterface
 
     /**
      * Assert that the given index mapping was updated.
+     *
+     * @param  (callable(Mapping): bool)|null  $callback
      */
-    public function assertMappingPut(string $index, callable $modifier): static
+    public function assertMappingPut(string $index, ?callable $callback = null): static
     {
-        $modifier($mapping = new Mapping);
-
-        $this->manager->assertMappingPut(MigrationPrefix::index($index), $mapping);
+        $this->manager->assertMappingPut(
+            MigrationPrefix::index($index),
+            $callback,
+        );
 
         return $this;
     }
 
     /**
      * Assert that the given index settings were updated.
+     *
+     * @param  (callable(Settings): bool)|null  $callback
      */
-    public function assertSettingsPut(string $index, callable $modifier): static
+    public function assertSettingsPut(string $index, ?callable $callback = null): static
     {
-        $modifier($settings = new Settings);
-
-        $this->manager->assertSettingsPut(MigrationPrefix::index($index), $settings);
+        $this->manager->assertSettingsPut(
+            MigrationPrefix::index($index),
+            $callback,
+        );
 
         return $this;
     }
@@ -242,22 +256,5 @@ class FakeIndexManager implements IndexManagerInterface
         );
 
         return $this;
-    }
-
-    /**
-     * Create an index blueprint for an assertion.
-     */
-    protected function blueprint(string $index, ?callable $modifier = null): IndexBlueprint
-    {
-        if (isset($modifier)) {
-            $modifier(
-                $mapping = new Mapping,
-                $settings = new Settings,
-            );
-
-            return new IndexBlueprint(MigrationPrefix::index($index), $mapping, $settings);
-        }
-
-        return new IndexBlueprint(MigrationPrefix::index($index));
     }
 }

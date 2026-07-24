@@ -11,7 +11,7 @@ use OpenSearch\Client;
 
 uses(RealOpenSearchTestCase::class, RefreshDatabase::class);
 
-it('runs migration commands against opensearch', function (): void {
+it('runs migration commands against opensearch', function () {
     $prefix = config('opensearch-migrations.index_name_prefix');
     $client = app(Client::class);
     $index = $prefix.'real_test';
@@ -40,7 +40,7 @@ it('runs migration commands against opensearch', function (): void {
     expect($client->indices()->exists(['index' => $index]))->toBeFalse();
 });
 
-it('runs index adapter operations against opensearch', function (): void {
+it('runs index adapter operations against opensearch', function () {
     $indices = app(IndexManagerInterface::class);
     $client = app(Client::class);
     $prefix = config('opensearch-migrations.index_name_prefix');
@@ -49,7 +49,7 @@ it('runs index adapter operations against opensearch', function (): void {
     $aliasName = $prefix.'adapter_real_alias';
 
     try {
-        $indices->create('adapter_real_test', function (Mapping $mapping, Settings $settings): void {
+        $indices->create('adapter_real_test', function (Mapping $mapping, Settings $settings) {
             $mapping->text('title')->keyword('status');
 
             $settings->index([
@@ -60,7 +60,7 @@ it('runs index adapter operations against opensearch', function (): void {
 
         expect($client->indices()->exists(['index' => $index]))->toBeTrue();
 
-        $indices->putMapping('adapter_real_test', function (Mapping $mapping): void {
+        $indices->putMapping('adapter_real_test', function (Mapping $mapping) {
             $mapping->keyword('category');
         });
 

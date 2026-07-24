@@ -1,20 +1,26 @@
 <?php
 
+use DirectoryTree\OpenSearchAdapter\Indices\Mapping;
+use DirectoryTree\OpenSearchAdapter\Indices\Settings;
 use DirectoryTree\OpenSearchMigrations\Facades\Index;
 use DirectoryTree\OpenSearchMigrations\IndexManagerInterface;
 use DirectoryTree\OpenSearchMigrations\Testing\Fakes\FakeIndexManager;
+use PHPUnit\Framework\ExpectationFailedException;
 
-it('resolves the index manager interface', function (): void {
+it('resolves the index manager interface', function () {
     expect(Index::getFacadeRoot())->toBeInstanceOf(IndexManagerInterface::class);
 });
 
-it('fakes the index manager', function (): void {
+it('fakes the index manager', function () {
     config()->set('opensearch-migrations.index_name_prefix', 'tenant_');
     config()->set('opensearch-migrations.alias_name_prefix', 'tenant_');
 
     $fake = Index::fake();
 
-    Index::create('posts');
+    Index::create('posts', function (Mapping $mapping, Settings $settings) {
+        $mapping->text('title');
+        $settings->index(['number_of_replicas' => 0]);
+    });
     Index::putAlias('posts', 'published_posts');
 
     expect(Index::getFacadeRoot())->toBe($fake)
@@ -26,7 +32,97 @@ it('fakes the index manager', function (): void {
         ->assertAliasPut('posts', 'published_posts');
 });
 
-it('fakes existing indices', function (): void {
+it('asserts created index definitions with a callback', function () {
+    config()->set('opensearch-migrations.index_name_prefix', 'tenant_');
+
+    $fake = Index::fake();
+
+    Index::create('posts', function (Mapping $mapping, Settings $settings) {
+        $mapping->text('title');
+        $settings->index(['number_of_replicas' => 0]);
+    });
+
+    $fake->assertCreated(
+        'posts',
+        fn (?Mapping $mapping, ?Settings $settings) => (
+            $mapping?->toArray() === [
+                'properties' => [
+                    'title' => ['type' => 'text'],
+                ],
+            ]
+            && $settings?->toArray() === [
+                'index' => ['number_of_replicas' => 0],
+            ]
+        )
+    );
+});
+
+it('fails when a created index does not satisfy the callback', function () {
+    $fake = Index::fake();
+
+    Index::create('posts');
+
+    expect(fn () => $fake->assertCreated('posts', fn () => false))
+        ->toThrow(ExpectationFailedException::class);
+});
+
+it('asserts updated mappings with an optional callback', function () {
+    config()->set('opensearch-migrations.index_name_prefix', 'tenant_');
+
+    $fake = Index::fake();
+
+    Index::putMapping('posts', function (Mapping $mapping) {
+        $mapping->keyword('status');
+    });
+
+    $fake
+        ->assertMappingPut('posts')
+        ->assertMappingPut('posts', fn (Mapping $mapping) => $mapping->toArray() === [
+            'properties' => [
+                'status' => ['type' => 'keyword'],
+            ],
+        ]);
+});
+
+it('fails when an updated mapping does not satisfy the callback', function () {
+    $fake = Index::fake();
+
+    Index::putMapping('posts', function (Mapping $mapping) {
+        $mapping->keyword('status');
+    });
+
+    expect(fn () => $fake->assertMappingPut('posts', fn () => false))
+        ->toThrow(ExpectationFailedException::class);
+});
+
+it('asserts updated settings with an optional callback', function () {
+    config()->set('opensearch-migrations.index_name_prefix', 'tenant_');
+
+    $fake = Index::fake();
+
+    Index::putSettings('posts', function (Settings $settings) {
+        $settings->index(['refresh_interval' => -1]);
+    });
+
+    $fake
+        ->assertSettingsPut('posts')
+        ->assertSettingsPut('posts', fn (Settings $settings) => $settings->toArray() === [
+            'index' => ['refresh_interval' => -1],
+        ]);
+});
+
+it('fails when updated settings do not satisfy the callback', function () {
+    $fake = Index::fake();
+
+    Index::putSettings('posts', function (Settings $settings) {
+        $settings->index(['refresh_interval' => -1]);
+    });
+
+    expect(fn () => $fake->assertSettingsPut('posts', fn () => false))
+        ->toThrow(ExpectationFailedException::class);
+});
+
+it('fakes existing indices', function () {
     config()->set('opensearch-migrations.index_name_prefix', 'tenant_');
 
     $fake = Index::fake(existing: ['posts']);

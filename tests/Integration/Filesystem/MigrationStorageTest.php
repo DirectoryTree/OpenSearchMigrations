@@ -3,7 +3,7 @@
 use DirectoryTree\OpenSearchMigrations\Filesystem\MigrationFile;
 use DirectoryTree\OpenSearchMigrations\Filesystem\MigrationStorage;
 
-it('creates files', function (): void {
+it('creates files', function () {
     $storage = resolve(MigrationStorage::class);
     $fileName = uniqid();
 
@@ -16,7 +16,7 @@ it('creates files', function (): void {
     @unlink($file->path());
 });
 
-it('creates the directory along with the file', function (): void {
+it('creates the directory along with the file', function () {
     $directory = config('opensearch-migrations.storage_directory');
     $firstLevelDirectory = $directory.'/nested';
     $secondLevelDirectory = $firstLevelDirectory.'/directories';
@@ -33,7 +33,7 @@ it('creates the directory along with the file', function (): void {
     @rmdir($firstLevelDirectory);
 });
 
-it('prepares when the directory exists', function (): void {
+it('prepares when the directory exists', function () {
     $directory = config('opensearch-migrations.storage_directory');
 
     resolve(MigrationStorage::class)->prepare();
@@ -41,7 +41,7 @@ it('prepares when the directory exists', function (): void {
     expect($directory)->toBeDirectory();
 });
 
-it('creates the directory when preparing', function (): void {
+it('creates the directory when preparing', function () {
     $directory = sys_get_temp_dir().'/opensearch_migrations_missing_storage';
 
     config()->set('opensearch-migrations.storage_directory', $directory);
@@ -53,7 +53,7 @@ it('creates the directory when preparing', function (): void {
     @rmdir($directory);
 });
 
-it('finds existing files', function (string $fileName): void {
+it('finds existing files', function (string $fileName) {
     $file = resolve(MigrationStorage::class)->find($fileName);
 
     expect($file)->toBeInstanceOf(MigrationFile::class);
@@ -65,7 +65,7 @@ it('finds existing files', function (string $fileName): void {
     ['2019_08_10_142230_update_test_index_mapping.php'],
 ]);
 
-it('does not find missing files', function (string $fileName): void {
+it('does not find missing files', function (string $fileName) {
     expect(resolve(MigrationStorage::class)->find($fileName))->toBeNull();
 })->with([
     ['2020_12_01_081000_create_test_index'],
@@ -74,7 +74,7 @@ it('does not find missing files', function (string $fileName): void {
     ['2020_08_10_142230_update_test_index_mapping.php'],
 ]);
 
-it('retrieves all migration files', function (): void {
+it('retrieves all migration files', function () {
     $files = resolve(MigrationStorage::class)->all();
 
     expect($files->map(fn (MigrationFile $file) => $file->name())->toArray())->toBe([
