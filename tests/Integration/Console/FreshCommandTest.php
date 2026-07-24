@@ -7,7 +7,7 @@ use DirectoryTree\OpenSearchMigrations\Repositories\MigrationRepository;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\NullOutput;
 
-it('drops indices and migrations', function (): void {
+it('drops indices and migrations', function () {
     $migrator = Mockery::mock(Migrator::class);
     $repository = Mockery::mock(MigrationRepository::class);
     $index = Mockery::mock(IndexManagerInterface::class);

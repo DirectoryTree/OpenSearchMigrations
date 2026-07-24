@@ -5,7 +5,7 @@ use DirectoryTree\OpenSearchMigrations\Migrator;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\NullOutput;
 
-it('rolls back one migration when a file name is provided', function (): void {
+it('rolls back one migration when a file name is provided', function () {
     $migrator = Mockery::mock(Migrator::class);
     app()->instance(Migrator::class, $migrator);
 
@@ -20,7 +20,7 @@ it('rolls back one migration when a file name is provided', function (): void {
     expect($command->run(new ArrayInput(['--force' => true, 'fileName' => 'test_file_name']), new NullOutput))->toBe(0);
 });
 
-it('rolls back the last batch when a file name is not provided', function (): void {
+it('rolls back the last batch when a file name is not provided', function () {
     $migrator = Mockery::mock(Migrator::class);
     app()->instance(Migrator::class, $migrator);
 

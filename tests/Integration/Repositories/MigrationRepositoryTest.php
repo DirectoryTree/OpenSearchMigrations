@@ -22,7 +22,7 @@ function seedMigrationRepositoryTable(): string
     return $table;
 }
 
-it('prepares the repository table when it is missing', function (): void {
+it('prepares the repository table when it is missing', function () {
     $table = config('opensearch-migrations.table');
 
     expect(Schema::hasTable($table))->toBeFalse();
@@ -32,7 +32,7 @@ it('prepares the repository table when it is missing', function (): void {
     expect(Schema::hasTable($table))->toBeTrue();
 });
 
-it('inserts records', function (): void {
+it('inserts records', function () {
     $table = seedMigrationRepositoryTable();
     $repository = app(MigrationRepository::class);
 
@@ -44,7 +44,7 @@ it('inserts records', function (): void {
     ])->exists())->toBeTrue();
 });
 
-it('matches Laravel migration table structure', function (): void {
+it('matches Laravel migration table structure', function () {
     $table = seedMigrationRepositoryTable();
     $repository = app(MigrationRepository::class);
 
@@ -55,7 +55,7 @@ it('matches Laravel migration table structure', function (): void {
     expect(DB::table($table)->max('id'))->toBe(3);
 });
 
-it('uses the configured database connection for the repository table', function (): void {
+it('uses the configured database connection for the repository table', function () {
     seedMigrationRepositoryTable();
 
     config()->set('database.connections.opensearch_migrations', [
@@ -74,7 +74,7 @@ it('uses the configured database connection for the repository table', function 
     expect(Schema::connection('opensearch_migrations')->hasTable('custom_opensearch_migrations'))->toBeTrue();
 });
 
-it('checks whether records exist', function (): void {
+it('checks whether records exist', function () {
     seedMigrationRepositoryTable();
 
     $repository = app(MigrationRepository::class);
@@ -83,7 +83,7 @@ it('checks whether records exist', function (): void {
     expect($repository->exists('2019_12_05_092345_drop_test_index'))->toBeFalse();
 });
 
-it('deletes records', function (): void {
+it('deletes records', function () {
     $table = seedMigrationRepositoryTable();
     $repository = app(MigrationRepository::class);
 
@@ -95,7 +95,7 @@ it('deletes records', function (): void {
     ])->exists())->toBeFalse();
 });
 
-it('gets all records', function (): void {
+it('gets all records', function () {
     seedMigrationRepositoryTable();
 
     expect(app(MigrationRepository::class)->getAll()->toArray())->toBe([
@@ -104,7 +104,7 @@ it('gets all records', function (): void {
     ]);
 });
 
-it('gets the last batch number', function (): void {
+it('gets the last batch number', function () {
     $table = seedMigrationRepositoryTable();
     $repository = app(MigrationRepository::class);
 
@@ -115,7 +115,7 @@ it('gets the last batch number', function (): void {
     expect($repository->getLastBatchNumber())->toBeNull();
 });
 
-it('gets the last batch records', function (): void {
+it('gets the last batch records', function () {
     seedMigrationRepositoryTable();
 
     expect(app(MigrationRepository::class)->getLastBatch()->toArray())->toBe([
@@ -123,7 +123,7 @@ it('gets the last batch records', function (): void {
     ]);
 });
 
-it('prepares when the table exists', function (): void {
+it('prepares when the table exists', function () {
     seedMigrationRepositoryTable();
 
     app(MigrationRepository::class)->prepare();
@@ -131,7 +131,7 @@ it('prepares when the table exists', function (): void {
     expect(Schema::hasTable(config('opensearch-migrations.table')))->toBeTrue();
 });
 
-it('prepares after creating a missing table', function (): void {
+it('prepares after creating a missing table', function () {
     $table = seedMigrationRepositoryTable();
 
     Schema::drop($table);
@@ -141,7 +141,7 @@ it('prepares after creating a missing table', function (): void {
     expect(Schema::hasTable($table))->toBeTrue();
 });
 
-it('deletes all records', function (): void {
+it('deletes all records', function () {
     seedMigrationRepositoryTable();
     $repository = app(MigrationRepository::class);
 

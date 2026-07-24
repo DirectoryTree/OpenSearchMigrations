@@ -34,7 +34,7 @@ function outputExpectingLines(array $lines): OutputStyle
     return $output;
 }
 
-it('does not run a missing single migration', function (): void {
+it('does not run a missing single migration', function () {
     $output = outputExpectingLines([
         '<error>Migration is not found:</error> 3020_11_01_045023_drop_test_index',
     ]);
@@ -44,7 +44,7 @@ it('does not run a missing single migration', function (): void {
     expect($migrator->migrateOne('3020_11_01_045023_drop_test_index'))->toBe($migrator);
 });
 
-it('runs a single migration when it exists', function (): void {
+it('runs a single migration when it exists', function () {
     Index::shouldReceive('putMapping')->once();
 
     $output = outputExpectingLines([
@@ -61,7 +61,7 @@ it('runs a single migration when it exists', function (): void {
     ])->exists())->toBeTrue();
 });
 
-it('does not run all migrations when the directory is empty', function (): void {
+it('does not run all migrations when the directory is empty', function () {
     $tmpDirectory = config('opensearch-migrations.storage_directory').'/tmp';
 
     @mkdir($tmpDirectory);
@@ -78,7 +78,7 @@ it('does not run all migrations when the directory is empty', function (): void 
     @rmdir($tmpDirectory);
 });
 
-it('runs all outstanding migrations', function (): void {
+it('runs all outstanding migrations', function () {
     Index::shouldReceive('putMapping')->once();
 
     $output = outputExpectingLines([
@@ -95,7 +95,7 @@ it('runs all outstanding migrations', function (): void {
     ])->exists())->toBeTrue();
 });
 
-it('does not roll back a missing single migration', function (): void {
+it('does not roll back a missing single migration', function () {
     $output = outputExpectingLines([
         '<error>Migration is not found:</error> 3020_11_01_045023_drop_test_index',
     ]);
@@ -105,7 +105,7 @@ it('does not roll back a missing single migration', function (): void {
     expect($migrator->rollbackOne('3020_11_01_045023_drop_test_index'))->toBe($migrator);
 });
 
-it('does not roll back a migration that has not run', function (): void {
+it('does not roll back a migration that has not run', function () {
     $output = outputExpectingLines([
         '<error>Migration is not yet migrated:</error> 2019_08_10_142230_update_test_index_mapping',
     ]);
@@ -115,7 +115,7 @@ it('does not roll back a migration that has not run', function (): void {
     expect($migrator->rollbackOne('2019_08_10_142230_update_test_index_mapping'))->toBe($migrator);
 });
 
-it('rolls back a migrated single migration', function (): void {
+it('rolls back a migrated single migration', function () {
     Index::shouldReceive('drop')->once();
 
     $output = outputExpectingLines([
@@ -132,7 +132,7 @@ it('rolls back a migrated single migration', function (): void {
     ])->exists())->toBeFalse();
 });
 
-it('does not roll back the last batch when some files are missing', function (): void {
+it('does not roll back the last batch when some files are missing', function () {
     $output = outputExpectingLines([
         '<error>Migration is not found:</error> 2019_03_10_101500_create_test_index',
     ]);
@@ -146,7 +146,7 @@ it('does not roll back the last batch when some files are missing', function ():
     expect($migrator->rollbackLastBatch())->toBe($migrator);
 });
 
-it('rolls back the last batch when all files are present', function (): void {
+it('rolls back the last batch when all files are present', function () {
     Index::shouldReceive('putMapping')->once();
 
     $output = outputExpectingLines([
@@ -167,7 +167,7 @@ it('rolls back the last batch when all files are present', function (): void {
     ])->exists())->toBeFalse();
 });
 
-it('does not roll back all migrations when some files are missing', function (): void {
+it('does not roll back all migrations when some files are missing', function () {
     $output = outputExpectingLines([
         '<error>Migration is not found:</error> 2019_03_10_101500_create_test_index,2019_01_01_053550_drop_test_index',
     ]);
@@ -182,7 +182,7 @@ it('does not roll back all migrations when some files are missing', function ():
     expect($migrator->rollbackAll())->toBe($migrator);
 });
 
-it('rolls back all migrations when all files are present', function (): void {
+it('rolls back all migrations when all files are present', function () {
     Index::shouldReceive('putMapping')->once();
     Index::shouldReceive('drop')->once();
 
@@ -204,7 +204,7 @@ it('rolls back all migrations when all files are present', function (): void {
     expect(DB::table($table)->where('migration', '2018_12_01_081000_create_test_index')->exists())->toBeFalse();
 });
 
-it('displays status', function (): void {
+it('displays status', function () {
     $output = Mockery::mock(OutputStyle::class);
 
     $output->shouldReceive('table')->once()->with(
@@ -220,13 +220,13 @@ it('displays status', function (): void {
     expect($migrator->showStatus())->toBe($migrator);
 });
 
-it('prepares the repository and storage', function (): void {
+it('prepares the repository and storage', function () {
     [, $migrator] = seededMigrator(Mockery::mock(OutputStyle::class));
 
     expect($migrator->prepare())->toBe($migrator);
 });
 
-it('creates the repository table when preparing', function (): void {
+it('creates the repository table when preparing', function () {
     $output = Mockery::mock(OutputStyle::class);
     [$table, $migrator] = seededMigrator($output);
 
@@ -236,7 +236,7 @@ it('creates the repository table when preparing', function (): void {
     expect(Schema::hasTable($table))->toBeTrue();
 });
 
-it('creates the storage directory when preparing', function (): void {
+it('creates the storage directory when preparing', function () {
     $directory = sys_get_temp_dir().'/opensearch_migrations_missing_directory';
 
     config()->set('opensearch-migrations.storage_directory', $directory);

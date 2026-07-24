@@ -5,7 +5,7 @@ use DirectoryTree\OpenSearchMigrations\Filesystem\MigrationStorage;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 
-it('creates migration files', function (): void {
+it('creates migration files', function () {
     $migrations = Mockery::mock(MigrationStorage::class);
     app()->instance(MigrationStorage::class, $migrations);
 

@@ -4,7 +4,7 @@ use DirectoryTree\OpenSearchMigrations\Factories\MigrationFactory;
 use DirectoryTree\OpenSearchMigrations\Filesystem\MigrationStorage;
 use DirectoryTree\OpenSearchMigrations\MigrationInterface;
 
-it('creates migrations from files', function (string $fileName): void {
+it('creates migrations from files', function (string $fileName) {
     $file = resolve(MigrationStorage::class)->find($fileName);
 
     expect(resolve(MigrationFactory::class)->makeFromFile($file))->toBeInstanceOf(MigrationInterface::class);
