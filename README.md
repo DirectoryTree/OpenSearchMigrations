@@ -3,10 +3,18 @@
 <p align="center">OpenSearch index migrations for Laravel.</p>
 
 <p align="center">
-<a href="https://github.com/DirectoryTree/OpenSearchMigrations/actions"><img src="https://img.shields.io/github/actions/workflow/status/DirectoryTree/OpenSearchMigrations/run-tests.yml?branch=master&style=flat-square"></a>
-<a href="https://packagist.org/packages/directorytree/opensearch-migrations"><img src="https://img.shields.io/packagist/v/directorytree/opensearch-migrations.svg?style=flat-square"></a>
-<a href="https://packagist.org/packages/directorytree/opensearch-migrations"><img src="https://img.shields.io/packagist/dt/directorytree/opensearch-migrations.svg?style=flat-square"></a>
-<a href="https://packagist.org/packages/directorytree/opensearch-migrations"><img src="https://img.shields.io/packagist/l/directorytree/opensearch-migrations.svg?style=flat-square"></a>
+    <a href="https://github.com/DirectoryTree/OpenSearchMigrations/actions/workflows/run-tests.yml"><img src="https://img.shields.io/github/actions/workflow/status/DirectoryTree/OpenSearchMigrations/run-tests.yml?branch=master&amp;style=flat-square" alt="Tests"></a>
+    <a href="https://packagist.org/packages/directorytree/opensearch-migrations"><img src="https://img.shields.io/packagist/dt/directorytree/opensearch-migrations.svg?style=flat-square" alt="Total Downloads"></a>
+    <a href="https://packagist.org/packages/directorytree/opensearch-migrations"><img src="https://img.shields.io/packagist/v/directorytree/opensearch-migrations.svg?style=flat-square" alt="Latest Version"></a>
+    <a href="https://github.com/DirectoryTree/OpenSearchMigrations/blob/master/LICENSE"><img src="https://img.shields.io/github/license/DirectoryTree/OpenSearchMigrations?style=flat-square" alt="License"></a>
+</p>
+
+<p align="center">
+    <a href="#installation">Installation</a>
+    <span> · </span>
+    <a href="#configuration">Configuration</a>
+    <span> · </span>
+    <a href="#creating-migrations">Migrations</a>
 </p>
 
 ---
